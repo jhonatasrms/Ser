@@ -9,16 +9,16 @@ export const PUSH_LIBRARY: AppNotification[] = [
     { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', linkText: "Manter Ofensiva" },
     { id: "push_3", title: "🎁 Presente especial", message: "Tem um bônus secreto esperando na área de planos.", type: 'success', link: '#pricing-section', linkText: "Ver Bônus" },
     { id: "push_4", title: "⏰ Hora da Calma", message: "3 minutinhos agora podem salvar sua noite de sono.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
-    { id: "push_offer_37", title: "😱 BAIXOU TUDO!", message: "Oferta secreta: Desbloqueie o app completo por apenas R$ 37,00!", type: 'promo', link: '#pricing-section', linkText: "APROVEITAR AGORA" }
+    { id: "push_offer_wa", title: "⚡ OFERTA RELÂMPAGO", message: "Desconto exclusivo liberado apenas no WhatsApp. Clique para resgatar!", type: 'promo', link: 'https://wa.me/5567993535250', linkText: "Resgatar no WhatsApp" }
 ];
 
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
-    id: "promo_flash_37",
+    id: "promo_flash_wa",
     title: "⚡ OFERTA RELÂMPAGO",
-    message: "Apenas HOJE: Todo o Método Sereninho por R$ 37,00. Não perca!",
-    link: "#pricing-section",
-    linkText: "Quero por R$ 37",
+    message: "Fale com o suporte agora e garanta uma condição especial no PIX!",
+    link: "https://wa.me/5567993535250",
+    linkText: "Chamar no WhatsApp",
     type: "promo"
   }
 ];

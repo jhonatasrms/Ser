@@ -815,7 +815,9 @@ const App: React.FC = () => {
 
     const handleNotificationAction = (link: string) => {
         setCurrentNotification(null);
-        if (link.startsWith('#')) {
+        if (link.startsWith('http')) {
+            window.open(link, '_blank');
+        } else if (link.startsWith('#')) {
             const id = link.replace('#', '');
             
             if (id === 'pricing-section') {
