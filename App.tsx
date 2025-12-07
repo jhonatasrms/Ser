@@ -9,7 +9,7 @@ import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } fro
 import { 
     Play, ShieldCheck, Star, Users, ArrowRight, Lock, 
     Clock, CheckSquare, ChevronDown, ChevronUp, Zap, Trophy,
-    Calendar, CheckCircle2, ListChecks
+    Calendar, CheckCircle2, ListChecks, Heart, Smile
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -19,28 +19,28 @@ const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> 
     return (
         <div className="pb-24">
             {/* Hero */}
-            <header className="relative overflow-hidden bg-brand-bg pt-12 pb-24 lg:pt-20 lg:pb-32">
-                <div className="max-w-5xl mx-auto px-4 text-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-secondary/20 text-brand-textSec text-xs font-semibold uppercase tracking-wide mb-6">
-                        <Star size={12} className="mr-1 text-brand-primary" fill="currentColor" /> Novo Método
+            <header className="relative overflow-hidden pt-8 pb-20 lg:pt-16 lg:pb-28">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/50 border border-brand-primary/20 text-brand-primary text-xs font-bold uppercase tracking-wide mb-6 shadow-sm">
+                        <Smile size={14} className="mr-2" /> Para crianças de 3 a 10 anos
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-brand-text tracking-tight mb-6 leading-tight">
+                    <h1 className="text-3xl md:text-5xl font-extrabold text-brand-text tracking-tight mb-6 leading-tight">
                         {COPY.heroTitle}
                     </h1>
-                    <p className="text-lg md:text-xl text-brand-textSec max-w-2xl mx-auto mb-10 leading-relaxed">
+                    <p className="text-lg md:text-xl text-brand-textSec max-w-2xl mx-auto mb-10 leading-relaxed font-medium opacity-90">
                         {COPY.heroSubtitle}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
                         <button 
                             onClick={onStartTrial}
-                            className="w-full sm:w-auto px-8 py-4 bg-brand-primary text-white rounded-xl font-bold shadow-lg shadow-brand-primary/30 hover:bg-blue-500 transition-transform active:scale-95 flex items-center justify-center"
+                            className="w-full sm:w-auto px-8 py-4 bg-brand-primary text-white rounded-xl font-bold shadow-xl shadow-brand-primary/20 hover:bg-[#A0522D] transition-transform active:scale-95 flex items-center justify-center border-b-4 border-[#5D4037]"
                         >
-                            <Play size={20} className="mr-2 fill-current" />
+                            <Heart size={20} className="mr-2 fill-current" />
                             {COPY.ctaPrimary}
                         </button>
                         <button 
                             onClick={onViewPlans}
-                            className="w-full sm:w-auto px-8 py-4 bg-white text-brand-text border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                            className="w-full sm:w-auto px-8 py-4 bg-brand-card text-brand-primary border border-brand-primary/30 rounded-xl font-bold hover:bg-white transition-colors"
                         >
                             {COPY.ctaSecondary}
                         </button>
@@ -49,18 +49,22 @@ const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> 
             </header>
 
             {/* Benefits */}
-            <section className="py-16 bg-white">
+            <section className="py-16 bg-brand-card/50 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                 <div className="max-w-5xl mx-auto px-4">
+                    <div className="text-center mb-12">
+                         <h2 className="text-2xl font-bold text-brand-text mb-2">Por que funciona?</h2>
+                         <div className="w-16 h-1 bg-brand-primary mx-auto rounded-full opacity-30"></div>
+                    </div>
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
-                            { icon: <Clock className="text-brand-primary" />, title: "2-30 minutos", desc: "Checklists rápidos que cabem em qualquer rotina." },
-                            { icon: <Trophy className="text-brand-highlight" />, title: "Gamificação", desc: "Sistema de pontos e badges que mantém você motivado." },
-                            { icon: <Zap className="text-brand-secondary" />, title: "Resultados Reais", desc: "Sinta mais foco e calma em apenas 3 dias." }
+                            { icon: <Clock className="text-brand-primary" />, title: "Rápido e Divertido", desc: "Brincadeiras de 5 minutos que cabem na rotina escolar." },
+                            { icon: <Smile className="text-brand-highlight" />, title: "Lúdico", desc: "Seu filho aprende a lidar com emoções brincando, sem sermão." },
+                            { icon: <Heart className="text-red-500" />, title: "Conexão Real", desc: "Momentos de qualidade que fortalecem o vínculo pais e filhos." }
                         ].map((b, i) => (
-                            <div key={i} className="p-6 rounded-2xl bg-brand-bg border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="mb-4 p-3 bg-white rounded-xl w-fit shadow-sm">{b.icon}</div>
+                            <div key={i} className="p-6 rounded-2xl bg-brand-bg border border-brand-primary/10 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="mb-4 p-3 bg-white rounded-full w-fit shadow-sm text-brand-primary">{b.icon}</div>
                                 <h3 className="text-xl font-bold text-brand-text mb-2">{b.title}</h3>
-                                <p className="text-gray-600">{b.desc}</p>
+                                <p className="text-brand-textSec">{b.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -68,26 +72,26 @@ const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> 
             </section>
 
             {/* How it works */}
-            <section className="py-20 bg-brand-bg">
+            <section className="py-20">
                 <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-brand-text mb-12">Como funciona</h2>
+                    <h2 className="text-3xl font-bold text-brand-text mb-12">Como transformar a rotina</h2>
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                          <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4">1</div>
-                             <h4 className="font-bold text-lg">Teste Grátis</h4>
-                             <p className="text-sm text-gray-500 mt-2 px-4">Cadastre-se rapidamente e acesse o dia 1 imediatamente.</p>
+                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">1</div>
+                             <h4 className="font-bold text-lg text-brand-text">Acesso Gratuito</h4>
+                             <p className="text-sm text-brand-textSec mt-2 px-4">Receba a primeira missão do dia imediatamente.</p>
                          </div>
-                         <div className="hidden md:block w-16 h-1 bg-gray-200 mx-4"></div>
+                         <div className="hidden md:block w-16 h-1 bg-brand-primary/20 mx-4"></div>
                          <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4">2</div>
-                             <h4 className="font-bold text-lg">Rotina Diária</h4>
-                             <p className="text-sm text-gray-500 mt-2 px-4">Complete micro-tarefas e ganhe pontos.</p>
+                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">2</div>
+                             <h4 className="font-bold text-lg text-brand-text">Missão Diária</h4>
+                             <p className="text-sm text-brand-textSec mt-2 px-4">Realize a atividade lúdica com seu filho.</p>
                          </div>
-                         <div className="hidden md:block w-16 h-1 bg-gray-200 mx-4"></div>
+                         <div className="hidden md:block w-16 h-1 bg-brand-primary/20 mx-4"></div>
                          <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4">3</div>
-                             <h4 className="font-bold text-lg">Evolução</h4>
-                             <p className="text-sm text-gray-500 mt-2 px-4">Desbloqueie novos dias e transforme sua vida.</p>
+                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">3</div>
+                             <h4 className="font-bold text-lg text-brand-text">Lar em Paz</h4>
+                             <p className="text-sm text-brand-textSec mt-2 px-4">Veja a ansiedade diminuir dia após dia.</p>
                          </div>
                     </div>
                 </div>
@@ -98,7 +102,7 @@ const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> 
 
 // --- DASHBOARD VIEW ---
 const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string) => void; onUnlock: () => void }> = ({ user, onToggleTask, onUnlock }) => {
-    if (!user) return <div className="p-8 text-center">Carregando perfil...</div>;
+    if (!user) return <div className="p-8 text-center text-brand-text">Preparando as brincadeiras...</div>;
 
     const todayStr = getTodayStr();
     
@@ -114,42 +118,42 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
     return (
         <div className="pb-24 max-w-3xl mx-auto px-4 pt-6">
             {/* Header / Stats */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
+            <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-8">
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-text">Olá, {user.name}</h2>
-                        <p className="text-gray-500 text-sm flex items-center mt-1">
-                            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${user.plan === 'trial' ? 'bg-brand-highlight' : 'bg-green-500'}`}></span>
-                            {user.plan === 'trial' ? 'Modo Teste (Dia 1)' : 'Membro Premium'}
+                        <h2 className="text-2xl font-bold text-brand-text">Olá, família de {user.name}</h2>
+                        <p className="text-brand-textSec text-sm flex items-center mt-1 font-medium">
+                            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${user.plan === 'trial' ? 'bg-brand-highlight' : 'bg-brand-success'}`}></span>
+                            {user.plan === 'trial' ? 'Modo Experiência (Dia 1)' : 'Família Sereninho'}
                         </p>
                     </div>
                     <div className="text-right">
                         <div className="text-3xl font-bold text-brand-primary">{user.points}</div>
-                        <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Pontos</div>
+                        <div className="text-xs uppercase tracking-wider text-brand-textSec font-semibold">Estrelinhas</div>
                     </div>
                 </div>
 
                 {user.plan === 'trial' && (
-                    <div className="bg-brand-highlight/10 border border-brand-highlight/20 rounded-lg p-3 mb-6 flex items-center justify-between text-sm text-brand-highlight font-medium">
+                    <div className="bg-white/60 border border-brand-highlight/30 rounded-lg p-3 mb-6 flex items-center justify-between text-sm text-brand-text font-medium">
                         <span>{COPY.trialBanner}</span>
-                        <button onClick={onUnlock} className="text-xs bg-brand-highlight text-white px-3 py-1 rounded-md ml-2 hover:opacity-90">Ver Planos</button>
+                        <button onClick={onUnlock} className="text-xs bg-brand-highlight text-white px-3 py-1.5 rounded-md ml-2 hover:opacity-90 font-bold shadow-sm">Ver Kits</button>
                     </div>
                 )}
 
                 {/* Progress Bar */}
-                <div className="mb-2 flex justify-between text-xs font-semibold text-gray-500 uppercase">
-                    <span>Progresso do dia</span>
+                <div className="mb-2 flex justify-between text-xs font-bold text-brand-textSec uppercase">
+                    <span>Diversão do dia</span>
                     <span>{progressPercent}%</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-brand-bg rounded-full h-3 overflow-hidden border border-brand-primary/10">
                     <div 
                         className="bg-brand-secondary h-full rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
                 {progressPercent === 100 && (
-                    <p className="mt-2 text-xs text-brand-success font-bold text-center animate-pulse">
-                        Parabéns! Todas as tarefas concluídas!
+                    <p className="mt-2 text-xs text-brand-success font-bold text-center animate-pulse flex items-center justify-center">
+                        <Star size={12} className="mr-1 fill-current" /> Vocês são incríveis! Dia concluído!
                     </p>
                 )}
             </div>
@@ -162,21 +166,21 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                     if (isLocked) {
                         return (
                             <div key={day} className="relative group">
-                                <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 rounded-2xl flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-gray-200">
-                                    <Lock className="text-gray-300 mb-3" size={32} />
-                                    <h3 className="font-bold text-gray-800 mb-2">Dia {day}: Rotina Avançada</h3>
-                                    <p className="text-gray-500 text-sm max-w-xs mb-4">{COPY.lockedTask}</p>
+                                <div className="absolute inset-0 bg-brand-bg/40 backdrop-blur-[2px] z-10 rounded-2xl flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-brand-primary/20">
+                                    <Lock className="text-brand-primary/40 mb-3" size={32} />
+                                    <h3 className="font-bold text-brand-text mb-2">Dia {day}: Novas Aventuras</h3>
+                                    <p className="text-brand-textSec text-sm max-w-xs mb-4 font-medium">{COPY.lockedTask}</p>
                                     <button 
                                         onClick={onUnlock}
-                                        className="bg-brand-primary text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-blue-600 transition-colors"
+                                        className="bg-brand-primary text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-[#8B4513] transition-colors"
                                     >
-                                        Desbloquear com R$47,90
+                                        Liberar Acesso Completo
                                     </button>
                                 </div>
                                 {/* Dummy content behind blur */}
                                 <div className="opacity-40 filter blur-sm pointer-events-none">
-                                    <div className="flex items-center mb-4"><div className="w-10 h-10 bg-gray-200 rounded-lg mr-4"></div><div className="h-4 bg-gray-200 rounded w-1/2"></div></div>
-                                    <div className="flex items-center"><div className="w-10 h-10 bg-gray-200 rounded-lg mr-4"></div><div className="h-4 bg-gray-200 rounded w-1/3"></div></div>
+                                    <div className="flex items-center mb-4"><div className="w-10 h-10 bg-brand-primary/10 rounded-lg mr-4"></div><div className="h-4 bg-brand-primary/10 rounded w-1/2"></div></div>
+                                    <div className="flex items-center"><div className="w-10 h-10 bg-brand-primary/10 rounded-lg mr-4"></div><div className="h-4 bg-brand-primary/10 rounded w-1/3"></div></div>
                                 </div>
                             </div>
                         );
@@ -185,9 +189,9 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                     // Render Tasks for Day 1 (or unlocked days)
                     return (
                         <div key={day}>
-                            <h3 className="text-lg font-bold text-brand-text mb-4 flex items-center">
-                                <Calendar size={18} className="mr-2 text-brand-secondary" />
-                                Dia {day} — {day === 1 ? 'Fundamentos' : 'Consolidação'}
+                            <h3 className="text-xl font-bold text-brand-text mb-4 flex items-center">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-secondary text-white text-sm mr-3 font-bold">{day}</span>
+                                {day === 1 ? 'Primeiros Passos' : 'Aprofundando'}
                             </h3>
                             <div className="space-y-4">
                                 {TASKS_DEFAULT.map(task => (
@@ -212,54 +216,58 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className={`bg-white rounded-xl border transition-all duration-300 ${isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/5' : 'border-gray-100 shadow-sm hover:shadow-md'}`}>
+        <div className={`bg-brand-card rounded-xl border transition-all duration-300 ${isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/10' : 'border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30'}`}>
             <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
                 <div className="flex items-center flex-1">
                      <button 
                         onClick={(e) => { e.stopPropagation(); onToggle(); }}
-                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 transition-all ${isCompleted ? 'bg-brand-secondary border-brand-secondary text-white' : 'border-gray-300 text-transparent hover:border-brand-secondary'}`}
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center mr-4 transition-all flex-shrink-0 ${isCompleted ? 'bg-brand-secondary border-brand-secondary text-white' : 'border-brand-primary/30 text-transparent hover:border-brand-secondary bg-white'}`}
                      >
-                        <CheckSquare size={16} fill="currentColor" className={isCompleted ? 'opacity-100' : 'opacity-0'} />
+                        <Star size={18} fill="currentColor" className={isCompleted ? 'opacity-100' : 'opacity-0'} />
                      </button>
                      <div>
-                         <h4 className={`font-semibold text-brand-text ${isCompleted ? 'line-through text-gray-400' : ''}`}>{task.title}</h4>
-                         <div className="flex items-center text-xs text-gray-500 mt-1 space-x-2">
-                             <span className="flex items-center"><Clock size={12} className="mr-1"/> {task.duration_min} min</span>
-                             <span className="text-brand-primary font-bold">+{task.points} pts</span>
+                         <h4 className={`font-bold text-lg text-brand-text ${isCompleted ? 'line-through text-brand-textSec/50' : ''}`}>{task.title}</h4>
+                         <div className="flex items-center text-xs text-brand-textSec font-medium mt-1 space-x-3">
+                             <span className="flex items-center bg-white px-2 py-0.5 rounded-md border border-brand-primary/10"><Clock size={12} className="mr-1 text-brand-primary"/> {task.duration_min} min</span>
+                             <span className="text-brand-highlight font-bold flex items-center"><Zap size={12} className="mr-1 fill-current"/> +{task.points} pts</span>
                          </div>
                      </div>
                 </div>
-                <div className="text-gray-400">
-                    {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                <div className="text-brand-primary/40 ml-2">
+                    {expanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                 </div>
             </div>
             
             {expanded && (
-                <div className="px-4 pb-4 pt-0 text-sm animate-in slide-in-from-top-2">
+                <div className="px-5 pb-6 pt-0 text-sm animate-in slide-in-from-top-2">
                     {task.image && (
-                        <div className="mb-4 rounded-lg overflow-hidden h-40 w-full relative">
-                            <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner">
                             <img src={task.image} alt={task.title} className="w-full h-full object-cover" loading="lazy" />
                         </div>
                     )}
-                    <div className="p-3 bg-brand-bg rounded-lg border border-gray-100 space-y-3">
-                        <p><span className="font-bold text-gray-700">Por que:</span> <span className="text-gray-600">{task.why}</span></p>
+                    <div className="p-4 bg-white rounded-xl border border-brand-primary/10 space-y-4 shadow-sm">
+                        <p className="flex items-start"><span className="font-bold text-brand-primary min-w-[80px] block">Por que:</span> <span className="text-brand-textSec italic">{task.why}</span></p>
+                        
                         <div>
-                            <span className="font-bold text-gray-700">Benefícios:</span>
-                            <div className="flex flex-wrap gap-2 mt-1">
+                            <span className="font-bold text-brand-primary block mb-2">Benefícios:</span>
+                            <div className="flex flex-wrap gap-2">
                                 {task.benefits.map((b, i) => (
-                                    <span key={i} className="px-2 py-0.5 bg-white rounded border border-gray-200 text-xs text-brand-textSec">{b}</span>
+                                    <span key={i} className="px-2.5 py-1 bg-brand-bg rounded-md border border-brand-primary/10 text-xs font-bold text-brand-textSec">{b}</span>
                                 ))}
                             </div>
                         </div>
+                        
                         {task.steps && task.steps.length > 0 && (
-                            <div className="pt-2 border-t border-gray-200">
-                                <span className="font-bold text-gray-700 flex items-center mb-2">
-                                    <ListChecks size={14} className="mr-1" /> Passo a Passo
+                            <div className="pt-4 border-t border-brand-primary/10">
+                                <span className="font-bold text-brand-primary flex items-center mb-3 text-base">
+                                    <ListChecks size={18} className="mr-2" /> Como brincar:
                                 </span>
-                                <ol className="list-decimal list-inside space-y-2 text-gray-600 pl-1">
+                                <ol className="space-y-3">
                                     {task.steps.map((step, idx) => (
-                                        <li key={idx} className="leading-snug">{step}</li>
+                                        <li key={idx} className="flex items-start text-brand-text">
+                                            <span className="font-bold text-brand-secondary mr-2">{idx + 1}.</span>
+                                            <span className="leading-snug">{step}</span>
+                                        </li>
                                     ))}
                                 </ol>
                             </div>
@@ -276,66 +284,66 @@ const PricingView: React.FC<{ onSelectPlan: (plan: Plan) => void }> = ({ onSelec
     return (
         <div className="pt-8 pb-24 max-w-5xl mx-auto px-4">
              <div className="text-center mb-12">
-                 <h2 className="text-3xl font-bold text-brand-text mb-4">Escolha seu ritmo</h2>
-                 <p className="text-gray-500">Acesso imediato. Cancelamento fácil.</p>
+                 <h2 className="text-3xl font-bold text-brand-text mb-4">Escolha a paz da sua família</h2>
+                 <p className="text-brand-textSec">Garantia total de 7 dias. Se não ajudar, devolvemos tudo.</p>
              </div>
 
              <div className="grid md:grid-cols-3 gap-6">
                  {PLANS.map(plan => (
                      <div 
                         key={plan.id} 
-                        className={`relative bg-white rounded-2xl p-6 border-2 flex flex-col transition-transform hover:-translate-y-1 ${plan.highlight ? 'border-brand-primary shadow-xl shadow-brand-primary/10' : 'border-gray-100 shadow-sm'}`}
+                        className={`relative bg-brand-card rounded-2xl p-6 border-2 flex flex-col transition-transform hover:-translate-y-1 ${plan.highlight ? 'border-brand-primary shadow-xl shadow-brand-primary/10 scale-105 z-10' : 'border-transparent shadow-md'}`}
                      >
                          {plan.highlight && (
-                             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-highlight text-white text-xs font-bold uppercase py-1 px-3 rounded-full shadow-sm">
-                                 Mais Vendido
+                             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-xs font-bold uppercase py-1.5 px-4 rounded-full shadow-md">
+                                 Mais Escolhido pelas Mães
                              </div>
                          )}
                          <div className="mb-4">
-                             <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                             <p className="text-sm text-gray-500">{plan.description}</p>
+                             <h3 className="text-xl font-bold text-brand-text">{plan.name}</h3>
+                             <p className="text-sm text-brand-textSec font-medium mt-1">{plan.description}</p>
                          </div>
                          <div className="mb-6">
                              <span className="text-4xl font-extrabold text-brand-text">R$ {plan.price}</span>
-                             <span className="text-gray-400 font-medium">/único</span>
+                             <span className="text-brand-textSec/60 font-medium text-sm block mt-1">pagamento único</span>
                          </div>
                          
-                         <ul className="space-y-3 mb-8 flex-1">
-                             <li className="flex items-center text-sm text-gray-600">
-                                 <CheckCircle2 size={16} className="text-green-500 mr-2" />
-                                 <span>{plan.days} dias de conteúdo</span>
+                         <ul className="space-y-4 mb-8 flex-1">
+                             <li className="flex items-start text-sm text-brand-textSec font-medium">
+                                 <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
+                                 <span>{plan.days} dias de brincadeiras guiadas</span>
                              </li>
-                             <li className="flex items-center text-sm text-gray-600">
-                                 <CheckCircle2 size={16} className="text-green-500 mr-2" />
-                                 <span>Acesso ao painel gamificado</span>
+                             <li className="flex items-start text-sm text-brand-textSec font-medium">
+                                 <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
+                                 <span>Acesso ao painel da família</span>
                              </li>
                              {plan.days > 7 && (
-                                <li className="flex items-center text-sm text-gray-600">
-                                    <CheckCircle2 size={16} className="text-green-500 mr-2" />
-                                    <span>Badges exclusivas</span>
+                                <li className="flex items-start text-sm text-brand-textSec font-medium">
+                                    <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
+                                    <span>Certificados de coragem</span>
                                 </li>
                              )}
                              {plan.days === 30 && (
-                                <li className="flex items-center text-sm text-gray-600">
-                                    <CheckCircle2 size={16} className="text-green-500 mr-2" />
-                                    <span>Suporte prioritário</span>
+                                <li className="flex items-start text-sm text-brand-textSec font-medium">
+                                    <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
+                                    <span>Suporte via WhatsApp</span>
                                 </li>
                              )}
                          </ul>
 
                          <button 
                             onClick={() => onSelectPlan(plan)}
-                            className={`w-full py-3 rounded-lg font-bold transition-colors ${plan.highlight ? 'bg-brand-primary text-white hover:bg-blue-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
+                            className={`w-full py-3.5 rounded-xl font-bold transition-colors border-b-4 active:border-b-0 active:translate-y-1 ${plan.highlight ? 'bg-brand-primary text-white border-[#5D4037] hover:bg-[#A0522D]' : 'bg-white text-brand-text border-gray-200 hover:bg-gray-50'}`}
                          >
-                             Desbloquear
+                             Quero este kit
                          </button>
                      </div>
                  ))}
              </div>
 
-             <div className="mt-12 p-6 bg-gray-50 rounded-xl text-center">
-                 <ShieldCheck className="mx-auto text-gray-400 mb-2" size={32} />
-                 <p className="text-sm text-gray-500">Garantia de satisfação de 7 dias ou seu dinheiro de volta.</p>
+             <div className="mt-12 p-6 bg-brand-card/50 rounded-xl text-center border border-brand-primary/10">
+                 <ShieldCheck className="mx-auto text-brand-primary mb-2" size={32} />
+                 <p className="text-sm text-brand-textSec font-medium">Compra segura e garantia de satisfação.</p>
              </div>
         </div>
     );
@@ -467,7 +475,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F7FAFB] text-brand-text">
+        <div className="min-h-screen text-brand-text">
             <TopBar 
                 currentView={view} 
                 onNavigate={navigate} 
@@ -516,8 +524,8 @@ const App: React.FC = () => {
 
             {/* Footer */}
             {view === 'home' && (
-                <footer className="bg-white border-t border-gray-100 py-8 text-center text-gray-400 text-sm">
-                    <p>© 2024 Método Sereninho. Todos os direitos reservados.</p>
+                <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12">
+                    <p>© 2024 Método Sereninho. Feito com carinho para famílias.</p>
                 </footer>
             )}
         </div>
