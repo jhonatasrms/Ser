@@ -33,18 +33,21 @@ export interface Plan {
   highlight: boolean;
   description: string;
   features?: string[];
-  ctaText?: string; // New field for custom button text
-  paymentLink?: string; // Link externo para pagamento (Kiwify, etc)
+  ctaText?: string; 
+  paymentLink?: string; 
+  image?: string; // New field for product grid
+  category?: string; // New field for product category
 }
 
 export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  link?: string; // Se tiver link, mostra botão
+  link?: string; 
   linkText?: string;
   type: 'promo' | 'info' | 'success';
   read?: boolean;
+  timestamp?: number; // New field for history
 }
 
 export interface Achievement {
@@ -67,7 +70,7 @@ export interface DayModule {
     title: string;
     subtitle: string;
     locked: boolean;
-    image: string; // Icon or bg representation
+    image: string; 
 }
 
 export interface AppState {

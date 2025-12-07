@@ -7,8 +7,9 @@ export const APP_NAME = "Método Sereninho";
 export const PUSH_LIBRARY: AppNotification[] = [
     { id: "push_1", title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', linkText: "Voltar agora" },
     { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', linkText: "Manter Ofensiva" },
-    { id: "push_3", title: "🎁 Presente especial", message: "Tem um bônus secreto esperando na área de planos.", type: 'success', link: '#pricing-section', linkText: "Ver Bônus" },
-    { id: "push_4", title: "⏰ Hora da Calma", message: "3 minutinhos agora podem salvar sua noite de sono.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
+    { id: "push_3", title: "💤 Hora do Sono", message: "Temos uma técnica nova para dormir rápido. Vem ver!", type: 'info', link: '#contents-section', linkText: "Ver Técnica" },
+    { id: "push_4", title: "⏰ 3 minutinhos?", message: "É só o que você precisa para acalmar a casa agora.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
+    { id: "push_5", title: "🌟 Você ganhou!", message: "Uma nova estrela está esperando para ser coletada.", type: 'success', link: '#dashboard', linkText: "Coletar" },
     { id: "push_offer_wa", title: "⚡ OFERTA RELÂMPAGO", message: "Desconto exclusivo liberado apenas no WhatsApp. Clique para resgatar!", type: 'promo', link: 'https://wa.me/5567993535250', linkText: "Resgatar no WhatsApp" }
 ];
 
@@ -90,7 +91,7 @@ export const COPY = {
     heroSubtitle: "O app que guia você e seu filho com micro-hábitos simples, brincadeiras terapêuticas e rotinas emocionais que funcionam de verdade.",
     heroSub2: "Menos telas. Mais vínculo. Mais paz na sua casa.",
     ctaPrimary: "Visualizar 1 Dia Grátis",
-    ctaSecondary: "Ver Planos",
+    ctaSecondary: "Ver Conteúdos",
     trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
 };
 
@@ -160,57 +161,77 @@ export const BONUS_LIST = [
     { title: "Bônus 3 – Mini Treinamento para Pais", desc: "Como falar, corrigir e orientar sem gritos, sem punições e sem culpa." }
 ];
 
+// --- PRODUTOS (Antigos Planos) ---
 export const PLANS: Plan[] = [
   { 
     id: "p7", 
-    name: "Kit Calmaria (7 dias)", 
-    price: "17,90", 
-    currency: "BRL", 
-    days: 7, 
-    highlight: false,
-    description: "Para crises pontuais ou para testar o método.",
-    features: [
-        "✔ 7 dias de atividades",
-        "✔ Áudios guiados",
-        "✔ Acesso via Web App",
-        "✔ Entrega imediata"
-    ],
-    ctaText: "Quero Testar por 7 Dias",
-    paymentLink: "https://pay.kiwify.com.br/7umfDIV"
-  },
-  { 
-    id: "p14", 
-    name: "Rotina Feliz (14 dias)", 
+    name: "Método Sereninho Completo", 
     price: "47,90", 
     currency: "BRL", 
     days: 14, 
     highlight: true,
-    description: "O favorito para criar hábito real.",
+    description: "Acesso vitalício ao método de 7 dias + bônus.",
     features: [
-        "✔ 14 dias completos",
-        "✔ Acesso vitalício",
-        "✔ Guia do Sono Tranquilo",
-        "✔ Suporte por WhatsApp",
-        "✔ Atividades extras"
+        "✔ Acesso Vitalício",
+        "✔ Todas as missões",
+        "✔ Guia do Sono",
+        "✔ Suporte WhatsApp"
     ],
-    ctaText: "Quero Criar uma Rotina Feliz"
+    ctaText: "Quero a Rotina Completa",
+    category: "Método",
+    image: "https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&q=80&w=400"
   },
   { 
-    id: "p30", 
-    name: "Super Família (30 dias)", 
-    price: "67,00", 
+    id: "kit_calmaria", 
+    name: "Kit Calmaria Express", 
+    price: "17,90", 
+    currency: "BRL", 
+    days: 7, 
+    highlight: false,
+    description: "Para crises pontuais. Alívio imediato.",
+    features: [
+        "✔ 7 dias de acesso",
+        "✔ Técnicas de emergência",
+        "✔ Áudios guiados"
+    ],
+    ctaText: "Testar Kit Calmaria",
+    paymentLink: "https://pay.kiwify.com.br/7umfDIV",
+    category: "Iniciante",
+    image: "https://images.unsplash.com/photo-1484820540004-14229fe36ca4?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "sos_birras", 
+    name: "SOS Birras (Áudios)", 
+    price: "29,90", 
     currency: "BRL", 
     days: 30, 
     highlight: false,
-    description: "Transformação completa.",
+    description: "O que fazer (e não fazer) na hora da crise.",
     features: [
-        "✔ 30 dias de atividades",
-        "✔ Acesso vitalício + atualizações",
-        "✔ Todos os bônus",
-        "✔ Comunidade exclusiva",
-        "✔ Materiais complementares"
+        "✔ Áudios para pais",
+        "✔ Scripts do que falar",
+        "✔ Como agir em público"
     ],
-    ctaText: "Quero Transformar Minha Família"
+    ctaText: "Quero parar as Birras",
+    category: "Áudio",
+    image: "https://images.unsplash.com/photo-1623696883279-787d544422e9?auto=format&fit=crop&q=80&w=400"
+  },
+  { 
+    id: "guia_sono", 
+    name: "Guia Sono Profundo", 
+    price: "37,00", 
+    currency: "BRL", 
+    days: 30, 
+    highlight: false,
+    description: "Rotinas noturnas que funcionam como mágica.",
+    features: [
+        "✔ Ritual do sono",
+        "✔ Massagem relaxante",
+        "✔ Histórias de ninar"
+    ],
+    ctaText: "Quero Noites de Paz",
+    category: "E-book",
+    image: "https://images.unsplash.com/photo-1522771753035-10a1d7d1dc2d?auto=format&fit=crop&q=80&w=400"
   }
 ];
 

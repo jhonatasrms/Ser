@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
-import { TrialModal, PaymentModal, OffersModal, InstallModal } from './components/Modals';
+import { TrialModal, PaymentModal, OffersModal, InstallModal, NotificationsHistoryModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
 import { 
@@ -14,7 +14,7 @@ import {
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
     Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote,
-    ArrowLeft, Calendar, Unlock, Download
+    ArrowLeft, Calendar, Unlock, Download, ShoppingBag
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -23,7 +23,7 @@ import {
 const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => void }> = ({ onStartTrial, onSelectPlan }) => {
     
     const scrollToPricing = () => {
-        const section = document.getElementById('pricing-section');
+        const section = document.getElementById('contents-section');
         if (section) section.scrollIntoView({ behavior: 'smooth' });
     };
 
@@ -188,49 +188,44 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                 </div>
             </section>
 
-            {/* 8. OFERTAS / PRICING */}
-            <section id="pricing-section" className="py-20 bg-white">
+            {/* 8. OFERTAS / CONTEÚDOS (GRID LAYOUT) */}
+            <section id="contents-section" className="py-20 bg-white">
                 <div className="max-w-5xl mx-auto px-4">
                      <div className="text-center mb-12">
-                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">Escolha o plano ideal</h2>
-                         <p className="text-brand-textSec">Investimento único. Acesso imediato.</p>
+                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">Mais Conteúdos</h2>
+                         <p className="text-brand-textSec">Materiais complementares para a rotina da sua família.</p>
                      </div>
 
-                     <div className="grid md:grid-cols-3 gap-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                          {PLANS.map(plan => (
                              <div 
                                 key={plan.id} 
-                                className={`relative bg-white rounded-2xl p-6 border-2 flex flex-col transition-all duration-300 ${plan.highlight ? 'border-brand-primary shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-md hover:border-brand-primary/30'}`}
+                                className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col md:flex-row h-full"
                              >
-                                 {plan.highlight && (
-                                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-xs font-bold uppercase py-1.5 px-4 rounded-full shadow-md whitespace-nowrap flex items-center">
-                                         <Star size={12} className="mr-1 fill-white" /> Mais Vendido
+                                 <div className="md:w-1/2 relative h-48 md:h-auto overflow-hidden">
+                                    <img src={plan.image} alt={plan.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    {plan.highlight && (
+                                     <div className="absolute top-3 left-3 bg-yellow-400 text-brand-text text-[10px] font-bold uppercase py-1 px-3 rounded-full shadow-md z-10">
+                                         Mais Vendido
                                      </div>
-                                 )}
-                                 <div className="mb-4 text-center">
-                                     <h3 className="text-xl font-bold text-brand-text">{plan.name}</h3>
-                                     <p className="text-xs text-brand-textSec font-medium mt-1 uppercase tracking-wide">{plan.description}</p>
-                                 </div>
-                                 <div className="mb-6 text-center">
-                                     <span className="text-4xl font-extrabold text-brand-text">R$ {plan.price}</span>
-                                     <span className="text-brand-textSec/60 font-medium text-sm block mt-1">pagamento único</span>
+                                    )}
                                  </div>
                                  
-                                 <ul className="space-y-3 mb-8 flex-1 px-2">
-                                     {plan.features?.map((feat, i) => (
-                                         <li key={i} className="flex items-start text-sm text-gray-700">
-                                            <span className="mr-2 font-bold text-brand-primary">✔</span>
-                                            <span>{feat.replace('✔ ', '')}</span>
-                                         </li>
-                                     ))}
-                                 </ul>
-
-                                 <button 
-                                    onClick={() => onSelectPlan(plan)}
-                                    className={`w-full py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 border-b-4 active:border-b-0 active:translate-y-1 ${plan.highlight ? 'bg-green-600 text-white border-green-800 hover:bg-green-700 shadow-lg' : 'bg-brand-bg text-brand-text border-brand-primary/20 hover:bg-brand-primary/10'}`}
-                                 >
-                                     {plan.ctaText || "Comprar Agora"}
-                                 </button>
+                                 <div className="p-6 md:w-1/2 flex flex-col">
+                                     <span className="text-xs font-bold text-brand-primary uppercase mb-2">{plan.category}</span>
+                                     <h3 className="text-xl font-bold text-brand-text leading-tight mb-2">{plan.name}</h3>
+                                     <p className="text-sm text-brand-textSec/80 mb-4 line-clamp-3">{plan.description}</p>
+                                     
+                                     <div className="mt-auto">
+                                         <span className="block text-2xl font-extrabold text-brand-text mb-3">R$ {plan.price}</span>
+                                         <button 
+                                            onClick={() => onSelectPlan(plan)}
+                                            className="w-full py-3 bg-brand-primary text-white rounded-lg font-bold shadow-md hover:bg-brand-primary/90 transition-colors"
+                                         >
+                                             {plan.ctaText || "Comprar Agora"}
+                                         </button>
+                                     </div>
+                                 </div>
                              </div>
                          ))}
                      </div>
@@ -291,6 +286,54 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                     </div>
                 </div>
             </section>
+        </div>
+    );
+};
+
+// --- CONTENT GRID VIEW (Reused logic from Home's Content Section) ---
+const ContentGridView: React.FC<{ onSelectPlan: (p: Plan) => void }> = ({ onSelectPlan }) => {
+    return (
+        <div className="pb-24 pt-10 font-sans">
+             <div className="max-w-5xl mx-auto px-4">
+                 <div className="text-center mb-8">
+                     <h2 className="text-3xl font-bold text-brand-text">Mais Conteúdos</h2>
+                     <p className="text-brand-textSec">Explore nossa biblioteca de calma.</p>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {PLANS.map(plan => (
+                             <div 
+                                key={plan.id} 
+                                className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md flex flex-col md:flex-row h-full"
+                             >
+                                 <div className="md:w-2/5 relative h-48 md:h-auto overflow-hidden">
+                                    <img src={plan.image} alt={plan.name} className="absolute inset-0 w-full h-full object-cover" />
+                                    {plan.highlight && (
+                                     <div className="absolute top-2 left-2 bg-yellow-400 text-brand-text text-[10px] font-bold uppercase py-1 px-2 rounded-full shadow-md z-10">
+                                         Top
+                                     </div>
+                                    )}
+                                 </div>
+                                 
+                                 <div className="p-4 md:w-3/5 flex flex-col">
+                                     <span className="text-[10px] font-bold text-brand-primary uppercase mb-1">{plan.category}</span>
+                                     <h3 className="text-lg font-bold text-brand-text leading-tight mb-1">{plan.name}</h3>
+                                     <p className="text-xs text-brand-textSec/80 mb-3 line-clamp-2">{plan.description}</p>
+                                     
+                                     <div className="mt-auto flex items-center justify-between">
+                                         <span className="text-xl font-extrabold text-brand-text">R$ {plan.price}</span>
+                                         <button 
+                                            onClick={() => onSelectPlan(plan)}
+                                            className="px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-bold"
+                                         >
+                                             Ver
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                         ))}
+                 </div>
+             </div>
         </div>
     );
 };
@@ -662,8 +705,10 @@ const App: React.FC = () => {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
     const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [currentNotification, setCurrentNotification] = useState<AppNotification | null>(null);
+    const [notificationHistory, setNotificationHistory] = useState<AppNotification[]>([]);
     const [notificationCount, setNotificationCount] = useState(0);
 
     // Initial Load
@@ -728,16 +773,23 @@ const App: React.FC = () => {
         // NOTIFICATION SYSTEM SIMULATION (Only if user exists)
         let pushInterval: any;
         if (loadedUser) {
-            // Initial Notification
+            // Initial Random Push on Entry
+            const randomEntryPush = PUSH_LIBRARY[Math.floor(Math.random() * PUSH_LIBRARY.length)];
+            const entryPushWithTime = { ...randomEntryPush, timestamp: Date.now() };
+            
+            setNotificationHistory([entryPushWithTime]);
             setNotificationCount(1);
             setTimeout(() => {
-                 setCurrentNotification(PROMO_NOTIFICATIONS[0]);
-            }, 3000);
+                 setCurrentNotification(entryPushWithTime);
+            }, 2000);
 
             // Simulate incoming pushes every 45 seconds
             pushInterval = setInterval(() => {
                 const randomPush = PUSH_LIBRARY[Math.floor(Math.random() * PUSH_LIBRARY.length)];
-                setCurrentNotification(randomPush);
+                const pushWithTime = { ...randomPush, timestamp: Date.now() };
+                
+                setCurrentNotification(pushWithTime);
+                setNotificationHistory(prev => [...prev, pushWithTime]);
                 setNotificationCount(prev => prev + 1);
                 playClickSound(); // Soft sound on notification
             }, 45000); 
@@ -820,24 +872,22 @@ const App: React.FC = () => {
         } else if (link.startsWith('#')) {
             const id = link.replace('#', '');
             
-            if (id === 'pricing-section') {
-                // If in dashboard, open modal
-                if (view === 'dashboard' || view === 'pricing') {
-                    setIsOffersModalOpen(true);
-                } else {
-                    // Fallback scrolling
-                    const el = document.getElementById(id);
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }
+            if (id === 'contents-section' || id === 'pricing') {
+                 if (user) {
+                     navigate('pricing');
+                 } else {
+                     const el = document.getElementById('contents-section');
+                     if (el) el.scrollIntoView({ behavior: 'smooth' });
+                 }
             } else if (id === 'dashboard') {
                  navigate('dashboard');
             }
         }
     };
 
-    const handleOpenOffers = () => {
+    const handleOpenHistory = () => {
         setNotificationCount(0); // Reset count on open
-        setIsOffersModalOpen(true);
+        setIsHistoryModalOpen(true);
     };
 
     return (
@@ -848,7 +898,7 @@ const App: React.FC = () => {
                 userPoints={user?.points} 
                 userStreak={user?.streak}
                 hasUser={!!user}
-                onOpenOffers={handleOpenOffers}
+                onOpenHistory={handleOpenHistory}
                 isLandingPage={!user}
                 notificationCount={notificationCount}
             />
@@ -864,9 +914,12 @@ const App: React.FC = () => {
                     <DashboardView 
                         user={user} 
                         onToggleTask={handleToggleTask} 
-                        onUnlock={handleOpenOffers} 
+                        onUnlock={() => setIsOffersModalOpen(true)} 
                         onOpenInstall={() => setIsInstallModalOpen(true)}
                     />
+                )}
+                {view === 'pricing' && (
+                    <ContentGridView onSelectPlan={handlePlanSelect} />
                 )}
             </main>
 
@@ -882,6 +935,13 @@ const App: React.FC = () => {
                 isOpen={isOffersModalOpen}
                 onClose={() => setIsOffersModalOpen(false)}
                 onSelectPlan={handlePlanSelect}
+            />
+
+            <NotificationsHistoryModal
+                isOpen={isHistoryModalOpen}
+                onClose={() => setIsHistoryModalOpen(false)}
+                history={notificationHistory}
+                onAction={handleNotificationAction}
             />
 
             <InstallModal

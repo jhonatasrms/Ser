@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ViewState } from '../types';
-import { Home, LayoutDashboard, CreditCard, Heart, CheckCircle, Bell, Flame } from 'lucide-react';
+import { Home, LayoutDashboard, CreditCard, Heart, CheckCircle, Bell, Flame, BookOpen } from 'lucide-react';
 
 interface LayoutProps {
   currentView: ViewState;
@@ -10,7 +10,7 @@ interface LayoutProps {
   userStreak?: number;
   isTrial?: boolean;
   hasUser: boolean; 
-  onOpenOffers?: () => void;
+  onOpenHistory?: () => void;
   isLandingPage?: boolean;
   notificationCount?: number;
 }
@@ -21,7 +21,7 @@ export const TopBar: React.FC<LayoutProps> = ({
   userPoints, 
   userStreak, 
   hasUser, 
-  onOpenOffers,
+  onOpenHistory,
   isLandingPage,
   notificationCount = 0
 }) => {
@@ -29,7 +29,7 @@ export const TopBar: React.FC<LayoutProps> = ({
     <nav className="sticky top-0 z-40 w-full bg-brand-bg/95 backdrop-blur-md border-b border-brand-primary/10 shadow-sm transition-all duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo - If Landing Page, not clickable to prevent refresh loops/confusion */}
+          {/* Logo */}
           <div 
             className={`flex items-center group ${!isLandingPage ? 'cursor-pointer' : ''}`} 
             onClick={() => !isLandingPage && onNavigate('dashboard')}
@@ -45,11 +45,11 @@ export const TopBar: React.FC<LayoutProps> = ({
              {/* Only show Bell and Stats if NOT on Landing Page (User is logged in) */}
              {!isLandingPage && (
                <>
-                 {/* Notification Bell with Numeric Badge */}
+                 {/* Notification Bell (History) */}
                  <button 
-                    onClick={onOpenOffers}
+                    onClick={onOpenHistory}
                     className="relative p-2 rounded-full hover:bg-brand-primary/10 transition-colors group animate-in zoom-in"
-                    aria-label="Ver ofertas"
+                    aria-label="Ver histórico de notificações"
                  >
                     <Bell size={22} className={`text-brand-primary group-hover:rotate-12 transition-transform ${notificationCount > 0 ? 'animate-pulse' : ''}`} />
                     {notificationCount > 0 && (
@@ -104,8 +104,8 @@ export const BottomNav: React.FC<{ currentView: ViewState; onNavigate: (v: ViewS
          onClick={() => onNavigate('pricing')}
          className={`flex flex-col items-center space-y-1 transition-transform duration-150 active:scale-90 ${currentView === 'pricing' ? 'text-brand-primary' : 'text-brand-textSec/60'}`}
        >
-         <CreditCard size={22} />
-         <span className="text-[10px] font-medium">Planos</span>
+         <BookOpen size={22} />
+         <span className="text-[10px] font-medium">Conteúdos</span>
        </button>
     </div>
   );

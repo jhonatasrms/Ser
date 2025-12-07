@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { X, Lock, Check, Loader2, Smartphone, User as UserIcon, Star, CheckCircle2, Download, Share, MoreVertical, PlusSquare } from 'lucide-react';
-import { Plan } from '../types';
+import { X, Lock, Check, Loader2, Smartphone, User as UserIcon, Star, CheckCircle2, Download, Share, MoreVertical, PlusSquare, Bell, Clock } from 'lucide-react';
+import { Plan, AppNotification } from '../types';
 import { PLANS } from '../constants';
 
 interface ModalProps {
@@ -44,7 +45,6 @@ export const InstallModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
                 </div>
 
                 <div className="space-y-6">
-                    {/* iOS Instructions */}
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <h4 className="font-bold text-gray-900 mb-2 flex items-center">
                             📱 iPhone (iOS)
@@ -56,7 +56,6 @@ export const InstallModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
                         </ol>
                     </div>
 
-                    {/* Android Instructions */}
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <h4 className="font-bold text-gray-900 mb-2 flex items-center">
                             🤖 Android
@@ -88,7 +87,6 @@ export const TrialModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubm
     e.preventDefault();
     if (name.length < 2 || whatsapp.length < 8) return; 
     setLoading(true);
-    // Simulate API delay
     setTimeout(() => {
         onSubmit(name, whatsapp);
         setLoading(false);
@@ -167,7 +165,7 @@ export const PaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; plan
             <>
                 <div className="bg-brand-bg rounded-lg p-4 mb-6 border border-brand-primary/20">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold text-brand-text">Plano Selecionado</span>
+                        <span className="font-semibold text-brand-text">Produto Selecionado</span>
                         <span className="text-brand-primary font-bold">{plan.name}</span>
                     </div>
                     <div className="flex justify-between items-center text-lg">
@@ -203,12 +201,12 @@ export const PaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; plan
                     <Check size={32} strokeWidth={3} />
                 </div>
                 <h4 className="text-xl font-bold text-gray-900 mb-2">Pagamento Aprovado!</h4>
-                <p className="text-gray-600 mb-6">Obrigado por assinar o Método Sereninho.</p>
+                <p className="text-gray-600 mb-6">Obrigado por adquirir este conteúdo.</p>
                 <button 
                     onClick={onClose}
                     className="w-full py-3 bg-brand-primary text-white rounded-lg font-bold transition-all transform hover:scale-[1.02] active:scale-95"
                 >
-                    Acessar Painel
+                    Acessar Conteúdo
                 </button>
             </div>
         )}
@@ -221,55 +219,86 @@ export const OffersModal: React.FC<{ isOpen: boolean; onClose: () => void; onSel
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title="Desbloquear Módulos">
             <div className="bg-brand-primary/5 p-4 text-center border-b border-brand-primary/10">
-                <p className="text-brand-text font-bold text-sm">Escolha um plano para liberar todos os 7 dias e ganhar os bônus exclusivos!</p>
+                <p className="text-brand-text font-bold text-sm">Adquira um de nossos conteúdos para liberar o acesso total!</p>
             </div>
-            <div className="p-4 space-y-4 bg-gray-50/50">
-                {PLANS.map((plan) => (
-                    <div 
-                        key={plan.id}
-                        className={`relative bg-white rounded-xl p-4 border-2 transition-all ${plan.highlight ? 'border-brand-primary shadow-lg ring-1 ring-brand-primary/20' : 'border-gray-200 shadow-sm'}`}
-                    >
-                         {plan.highlight && (
-                             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-[10px] font-bold uppercase py-1 px-3 rounded-full shadow-sm flex items-center">
-                                 <Star size={10} className="mr-1 fill-white" /> Recomendado
-                             </div>
-                         )}
-                         <div className="flex justify-between items-start mb-2 mt-1">
-                             <div>
-                                 <h4 className="font-bold text-brand-text text-lg">{plan.name}</h4>
-                                 <p className="text-xs text-brand-textSec">{plan.description}</p>
-                             </div>
-                             <div className="text-right">
-                                 <div className="text-xl font-extrabold text-brand-text">R$ {plan.price}</div>
-                             </div>
-                         </div>
-                         
-                         <div className="my-3 border-t border-gray-100 pt-3">
-                             <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">O que está incluso:</p>
-                             <ul className="space-y-1.5">
-                                 {plan.features?.slice(0, 3).map((feat, i) => (
-                                     <li key={i} className="flex items-start text-xs text-gray-600">
-                                         <CheckCircle2 size={12} className="text-green-500 mr-1.5 mt-0.5 flex-shrink-0" />
-                                         <span>{feat.replace('✔ ', '')}</span>
-                                     </li>
-                                 ))}
-                                 {plan.features && plan.features.length > 3 && (
-                                     <li className="text-xs text-brand-primary font-medium italic pl-4">
-                                         + {plan.features.length - 3} outros benefícios...
-                                     </li>
-                                 )}
-                             </ul>
-                         </div>
-
-                         <button 
+            <div className="p-4 bg-gray-50/50">
+                <div className="grid grid-cols-2 gap-3">
+                    {PLANS.map((plan) => (
+                        <div 
+                            key={plan.id}
+                            className={`relative bg-white rounded-xl overflow-hidden border transition-all cursor-pointer hover:shadow-lg flex flex-col ${plan.highlight ? 'border-brand-primary ring-1 ring-brand-primary/20' : 'border-gray-200'}`}
                             onClick={() => onSelectPlan(plan)}
-                            className={`w-full py-2.5 rounded-lg font-bold text-sm transition-all transform hover:scale-[1.02] active:scale-95 ${plan.highlight ? 'bg-green-600 text-white hover:bg-green-700 shadow-md' : 'bg-brand-primary text-white hover:bg-brand-primary/90'}`}
-                         >
-                             {plan.ctaText}
-                         </button>
-                    </div>
-                ))}
+                        >
+                             <div className="aspect-[4/3] w-full relative">
+                                <img src={plan.image} alt={plan.name} className="w-full h-full object-cover" />
+                                {plan.highlight && (
+                                     <div className="absolute top-2 right-2 bg-yellow-400 text-brand-text text-[10px] font-bold uppercase py-1 px-2 rounded-md shadow-sm">
+                                         Mais Vendido
+                                     </div>
+                                )}
+                             </div>
+                             
+                             <div className="p-3 flex flex-col flex-1">
+                                 <span className="text-[10px] text-brand-primary font-bold uppercase mb-1">{plan.category}</span>
+                                 <h4 className="font-bold text-brand-text text-sm leading-tight mb-1">{plan.name}</h4>
+                                 <p className="text-xs text-brand-textSec line-clamp-2 mb-2 flex-1">{plan.description}</p>
+                                 
+                                 <div className="mt-auto">
+                                     <div className="text-lg font-extrabold text-brand-text mb-2">R$ {plan.price}</div>
+                                     <button className="w-full py-2 bg-brand-primary text-white rounded-lg text-xs font-bold hover:bg-brand-primary/90">
+                                         Comprar
+                                     </button>
+                                 </div>
+                             </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </BaseModal>
     );
+}
+
+export const NotificationsHistoryModal: React.FC<{ isOpen: boolean; onClose: () => void; history: AppNotification[]; onAction: (link: string) => void }> = ({ isOpen, onClose, history, onAction }) => {
+    return (
+        <BaseModal isOpen={isOpen} onClose={onClose} title="Histórico de Notificações">
+            <div className="p-0">
+                {history.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                        <Bell size={48} className="mx-auto text-gray-300 mb-4" />
+                        <p>Nenhuma notificação por enquanto.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-100">
+                        {history.slice().reverse().map((notif, idx) => (
+                            <div key={idx} className="p-4 hover:bg-brand-bg/10 transition-colors flex items-start gap-3">
+                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${notif.type === 'promo' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-brand-primary'}`}>
+                                    <Bell size={14} />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h4 className="font-bold text-sm text-brand-text">{notif.title}</h4>
+                                        {notif.timestamp && (
+                                            <span className="text-[10px] text-gray-400 flex items-center">
+                                                <Clock size={10} className="mr-1" />
+                                                {new Date(notif.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-brand-textSec mb-2">{notif.message}</p>
+                                    {notif.link && (
+                                        <button 
+                                            onClick={() => { onClose(); onAction(notif.link!); }}
+                                            className="text-xs font-bold text-brand-primary underline"
+                                        >
+                                            {notif.linkText || "Ver detalhe"}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </BaseModal>
+    )
 }
