@@ -4,12 +4,16 @@ import { TopBar, BottomNav } from './components/Layout';
 import { TrialModal, PaymentModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
-import { COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, SCREEN_PROBLEM, FAQ, ACHIEVEMENTS } from './constants';
+import { 
+    COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, 
+    SCREEN_PROBLEM, FAQ, ACHIEVEMENTS, SOLUTION_SECTION, 
+    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST 
+} from './constants';
 import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } from './services/storageService';
 import { 
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
-    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight
+    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -23,18 +27,22 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
     };
 
     return (
-        <div className="pb-24">
-            {/* Hero Section */}
+        <div className="pb-24 font-sans">
+            {/* 1. HERO SECTION */}
             <header className="relative pt-10 pb-20 px-4 text-center max-w-4xl mx-auto">
                 <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/60 border border-brand-primary/20 text-brand-primary text-xs font-bold uppercase tracking-wide mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-                    <Smile size={14} className="mr-2" /> Web App para crianças de 3 a 10 anos
+                    <Smile size={14} className="mr-2" /> Web App Terapêutico
                 </div>
-                <h1 className="text-4xl md:text-6xl font-extrabold text-brand-text tracking-tight mb-6 leading-[1.1]">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-brand-text tracking-tight mb-6 leading-[1.1]">
                     {COPY.heroTitle}
                 </h1>
-                <p className="text-lg md:text-xl text-brand-textSec max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                <h2 className="text-xl md:text-2xl text-brand-textSec max-w-2xl mx-auto mb-6 font-bold">
+                    {COPY.heroSub2}
+                </h2>
+                <p className="text-lg text-brand-textSec/80 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
                     {COPY.heroSubtitle}
                 </p>
+                
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button 
                         onClick={onStartTrial}
@@ -50,100 +58,148 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                         {COPY.ctaSecondary}
                     </button>
                 </div>
-                {/* App Mockup Hint */}
-                <div className="mt-12 opacity-80">
-                    <p className="text-xs text-brand-textSec font-semibold uppercase tracking-widest mb-2">Compatível com</p>
-                    <div className="flex justify-center gap-4 text-brand-primary/60">
-                         <span className="flex items-center gap-1"><Smartphone size={16}/> iOS</span>
-                         <span className="flex items-center gap-1"><Smartphone size={16}/> Android</span>
-                         <span className="flex items-center gap-1"><Smartphone size={16}/> Tablet</span>
-                    </div>
-                </div>
             </header>
 
-            {/* PROBLEM SECTION: Screen Time */}
+            {/* 2. O PROBLEMA (DORES) */}
             <section className="py-20 bg-brand-primary/5 border-y border-brand-primary/10">
                 <div className="max-w-4xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row items-center gap-12">
-                        <div className="md:w-1/2 relative">
-                            <div className="absolute inset-0 bg-red-500/10 blur-3xl rounded-full"></div>
-                            <div className="relative bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-400 transform transition hover:scale-[1.01]">
-                                <AlertTriangle className="text-red-500 mb-4" size={40} />
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Sinais de Alerta 🚨</h3>
-                                <div className="space-y-3 mt-4">
-                                    <div className="flex items-center text-gray-700 bg-red-50 p-2 rounded-lg">
-                                        <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                                        <p className="italic text-sm">"Fica agressivo quando tiro o tablet"</p>
+                    <h2 className="text-3xl font-bold text-center text-brand-text mb-2">{SCREEN_PROBLEM.title}</h2>
+                    <p className="text-center text-brand-textSec mb-12 font-medium">{SCREEN_PROBLEM.subtitle}</p>
+                    
+                    <div className="bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-400 mb-10">
+                         <div className="grid md:grid-cols-2 gap-4">
+                            {SCREEN_PROBLEM.items.map((item, i) => (
+                                <div key={i} className="flex items-start">
+                                    <XCircle className="text-red-500 mr-3 flex-shrink-0 mt-1" size={20} />
+                                    <span className="text-brand-text font-medium">{item}</span>
+                                </div>
+                            ))}
+                         </div>
+                    </div>
+                    
+                    <p className="text-lg text-center text-brand-textSec leading-relaxed max-w-3xl mx-auto font-medium">
+                        {SCREEN_PROBLEM.conclusion}
+                    </p>
+                </div>
+            </section>
+
+            {/* 3. SOLUÇÃO */}
+            <section className="py-20 bg-white">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <h2 className="text-3xl font-bold text-brand-text mb-12 max-w-2xl mx-auto leading-tight">
+                        {SOLUTION_SECTION.title}
+                    </h2>
+                    <p className="mb-8 text-brand-textSec">O Sereninho transforma sua rotina em pequenos passos diários que:</p>
+                    
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {SOLUTION_SECTION.items.map((item, i) => (
+                            <div key={i} className="bg-brand-bg/40 p-5 rounded-xl border border-brand-primary/10 flex items-center shadow-sm">
+                                <CheckCircle2 className="text-green-600 mr-3 flex-shrink-0" size={24} />
+                                <span className="text-left font-bold text-brand-text text-sm">{item}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-12 bg-green-100/50 inline-block px-6 py-3 rounded-lg border border-green-200 text-green-800 font-bold">
+                        ⏱️ Tudo isso em menos de 10 minutos por dia.
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. COMO FUNCIONA */}
+            <section className="py-20 bg-brand-bg">
+                <div className="max-w-5xl mx-auto px-4">
+                    <div className="text-center mb-12">
+                         <h2 className="text-3xl font-bold text-brand-text mb-2">Simples. Visual. Funciona.</h2>
+                         <p className="text-brand-textSec">Adapta-se a qualquer rotina.</p>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-3 gap-8">
+                         {HOW_IT_WORKS.map((step, i) => (
+                             <div key={i} className="bg-white p-8 rounded-2xl shadow-md border-b-4 border-brand-primary/20 hover:-translate-y-2 transition-transform duration-300">
+                                 <div className="w-12 h-12 bg-brand-primary text-white rounded-full flex items-center justify-center text-xl font-bold mb-6 shadow-lg">
+                                     {i + 1}
+                                 </div>
+                                 <h3 className="font-bold text-xl text-brand-text mb-3">{step.title.replace(/^\d+\.\s/, '')}</h3>
+                                 <p className="text-brand-textSec leading-relaxed">{step.desc}</p>
+                             </div>
+                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 5. BENEFÍCIOS COMPROVADOS */}
+            <section className="py-20 bg-white">
+                <div className="max-w-4xl mx-auto px-4">
+                     <h2 className="text-3xl font-bold text-center text-brand-text mb-12">Benefícios Comprovados</h2>
+                     <div className="grid sm:grid-cols-2 gap-y-4 gap-x-12">
+                         {BENEFITS_LIST.map((benefit, i) => (
+                             <div key={i} className="flex items-center p-3 rounded-lg hover:bg-brand-bg/30 transition-colors">
+                                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0">
+                                    <CheckCircle2 className="text-green-600" size={18} />
+                                 </div>
+                                 <span className="text-lg font-medium text-brand-text">{benefit}</span>
+                             </div>
+                         ))}
+                     </div>
+                </div>
+            </section>
+            
+            {/* 6. BÔNUS EXCLUSIVOS */}
+            <section className="py-20 bg-brand-primary/5">
+                <div className="max-w-4xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-center text-brand-text mb-12 flex items-center justify-center gap-3">
+                        <Gift className="text-brand-primary" /> Bônus Exclusivos
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {BONUS_LIST.map((bonus, i) => (
+                            <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-brand-primary/10 text-center">
+                                <div className="text-brand-primary font-bold text-lg mb-2">{bonus.title}</div>
+                                <p className="text-sm text-gray-600">{bonus.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 7. DEPOIMENTOS */}
+            <section className="py-20 bg-brand-bg border-y border-brand-primary/10">
+                <div className="max-w-6xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-center text-brand-text mb-4">Depoimentos de Mães</h2>
+                    <p className="text-center text-brand-textSec mb-12">Histórias reais. Resultados reais.</p>
+                    
+                    <div className="grid md:grid-cols-3 gap-8">
+                        {TESTIMONIALS.map((t) => (
+                            <div key={t.id} className="bg-white p-8 rounded-2xl shadow-lg relative">
+                                <Quote className="absolute top-4 left-4 text-brand-primary/20" size={40} />
+                                <p className="text-brand-text italic mb-6 relative z-10 pt-4 text-lg">"{t.text}"</p>
+                                <div className="flex items-center">
+                                    <div className="w-10 h-10 bg-brand-primary/20 rounded-full flex items-center justify-center font-bold text-brand-primary mr-3">
+                                        {t.author[0]}
                                     </div>
-                                    <div className="flex items-center text-gray-700 bg-red-50 p-2 rounded-lg">
-                                        <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                                        <p className="italic text-sm">"Não consegue brincar sozinho"</p>
-                                    </div>
-                                    <div className="flex items-center text-gray-700 bg-red-50 p-2 rounded-lg">
-                                        <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                                        <p className="italic text-sm">"Sono agitado e muitas birras"</p>
+                                    <div>
+                                        <p className="font-bold text-brand-text">{t.author}</p>
+                                        <p className="text-xs text-brand-textSec">{t.childAge}</p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="md:w-1/2">
-                            <h2 className="text-3xl font-bold text-brand-text mb-6">{SCREEN_PROBLEM.title}</h2>
-                            <p className="text-brand-textSec text-lg leading-relaxed mb-6">
-                                {SCREEN_PROBLEM.text}
-                            </p>
-                            <ul className="space-y-3">
-                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Menos telas, mais olho no olho.</li>
-                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Atividades sensoriais reais.</li>
-                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Sono regulado naturalmente.</li>
-                            </ul>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-             {/* HOW IT WORKS */}
-             <section className="py-20 bg-brand-bg">
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-brand-text mb-12">Como o App funciona?</h2>
-                    <div className="grid md:grid-cols-3 gap-8">
-                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10 transition hover:-translate-y-1">
-                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
-                                 <Smartphone size={24} />
-                             </div>
-                             <h3 className="font-bold text-lg mb-2">1. Receba a Missão</h3>
-                             <p className="text-sm text-gray-600">Todo dia uma nova atividade desbloqueada no seu painel.</p>
-                         </div>
-                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10 transition hover:-translate-y-1">
-                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
-                                 <Smile size={24} />
-                             </div>
-                             <h3 className="font-bold text-lg mb-2">2. Brinque Junto</h3>
-                             <p className="text-sm text-gray-600">Siga o passo a passo ilustrado e visual.</p>
-                         </div>
-                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10 transition hover:-translate-y-1">
-                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
-                                 <Star size={24} />
-                             </div>
-                             <h3 className="font-bold text-lg mb-2">3. Ganhe Estrelinhas</h3>
-                             <p className="text-sm text-gray-600">Complete a rotina e veja seu filho evoluir no "Gamification".</p>
-                         </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* PRICING SECTION */}
-            <section id="pricing-section" className="py-20 bg-brand-card border-t border-brand-primary/10">
+            {/* 8. OFERTAS / PRICING */}
+            <section id="pricing-section" className="py-20 bg-white">
                 <div className="max-w-5xl mx-auto px-4">
                      <div className="text-center mb-12">
-                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">Escolha seu Plano</h2>
-                         <p className="text-brand-textSec">Invista na saúde emocional da sua família.</p>
+                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">Escolha o plano ideal</h2>
+                         <p className="text-brand-textSec">Investimento único. Acesso imediato.</p>
                      </div>
 
                      <div className="grid md:grid-cols-3 gap-6">
                          {PLANS.map(plan => (
                              <div 
                                 key={plan.id} 
-                                className={`relative bg-white rounded-2xl p-6 border-2 flex flex-col transition-all duration-300 ${plan.highlight ? 'border-brand-primary shadow-2xl scale-105 z-10' : 'border-transparent shadow-md hover:border-brand-primary/30 hover:scale-[1.02]'}`}
+                                className={`relative bg-white rounded-2xl p-6 border-2 flex flex-col transition-all duration-300 ${plan.highlight ? 'border-brand-primary shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-md hover:border-brand-primary/30'}`}
                              >
                                  {plan.highlight && (
                                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-xs font-bold uppercase py-1.5 px-4 rounded-full shadow-md whitespace-nowrap flex items-center">
@@ -162,8 +218,8 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                                  <ul className="space-y-3 mb-8 flex-1 px-2">
                                      {plan.features?.map((feat, i) => (
                                          <li key={i} className="flex items-start text-sm text-gray-700">
-                                            <CheckCircle2 size={16} className="text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                                            <span>{feat}</span>
+                                            <span className="mr-2 font-bold text-brand-primary">✔</span>
+                                            <span>{feat.replace('✔ ', '')}</span>
                                          </li>
                                      ))}
                                  </ul>
@@ -172,7 +228,7 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                                     onClick={() => onSelectPlan(plan)}
                                     className={`w-full py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 border-b-4 active:border-b-0 active:translate-y-1 ${plan.highlight ? 'bg-green-600 text-white border-green-800 hover:bg-green-700 shadow-lg' : 'bg-brand-bg text-brand-text border-brand-primary/20 hover:bg-brand-primary/10'}`}
                                  >
-                                     Comprar Agora
+                                     {plan.ctaText || "Comprar Agora"}
                                  </button>
                              </div>
                          ))}
@@ -180,58 +236,52 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                 </div>
             </section>
 
-             {/* BIO SECTION: Quem sou eu */}
-             <section className="py-20 bg-white border-t border-brand-primary/5">
+             {/* 9. QUEM CRIOU (BIO) */}
+             <section className="py-20 bg-brand-bg border-t border-brand-primary/5">
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="flex flex-col md:flex-row items-center gap-10">
                          <div className="md:w-1/3">
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-brand-bg rounded-2xl transform rotate-6 transition-transform group-hover:rotate-3"></div>
+                                <div className="absolute inset-0 bg-white rounded-2xl transform rotate-6 transition-transform group-hover:rotate-3 shadow-md"></div>
                                 <img 
                                     src={BIO.image} 
                                     alt={BIO.name} 
                                     className="relative rounded-2xl shadow-lg w-full object-cover aspect-[3/4] border-4 border-white transform transition-transform group-hover:scale-[1.01]"
                                 />
-                                <div className="absolute -bottom-4 -right-4 bg-brand-primary text-white p-3 rounded-lg shadow-lg text-center">
-                                    <p className="font-bold text-sm">CRP 06/12345</p>
-                                </div>
                             </div>
                          </div>
-                         <div className="md:w-2/3">
+                         <div className="md:w-2/3 text-center md:text-left">
                              <span className="text-brand-primary font-bold tracking-wider uppercase text-sm mb-2 block">Quem criou o método?</span>
                              <h2 className="text-3xl font-bold text-brand-text mb-2">{BIO.name}</h2>
-                             <p className="text-brand-textSec font-medium mb-6">{BIO.role}</p>
-                             <div className="prose prose-brown text-brand-textSec leading-relaxed">
-                                 <p className="italic text-lg">"{BIO.story}"</p>
+                             <p className="text-brand-textSec font-medium mb-6 bg-white/50 inline-block px-3 py-1 rounded-lg border border-brand-primary/10">{BIO.role}</p>
+                             <div className="prose prose-brown text-brand-textSec leading-relaxed text-lg">
+                                 <p>"{BIO.story}"</p>
                              </div>
-                             <div className="mt-8 flex items-center gap-4 bg-brand-bg/30 p-4 rounded-xl">
-                                 <div className="flex -space-x-2">
-                                     {[1,2,3].map(i => (
-                                         <div key={i} className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500 shadow-sm">Mãe</div>
-                                     ))}
-                                 </div>
-                                 <p className="text-sm text-brand-primary font-bold">+ de 2.000 famílias ajudadas</p>
+                             <div className="mt-8 flex items-center justify-center md:justify-start gap-4 p-4 rounded-xl">
+                                 <p className="text-sm font-bold bg-green-100 text-green-800 px-4 py-2 rounded-full border border-green-200">
+                                    + de 2.000 famílias ajudadas
+                                 </p>
                              </div>
                          </div>
                     </div>
                 </div>
             </section>
 
-            {/* FAQ SECTION */}
-            <section className="py-20 bg-brand-bg">
+            {/* 10. FAQ SECTION */}
+            <section className="py-20 bg-white">
                 <div className="max-w-3xl mx-auto px-4">
                     <h2 className="text-3xl font-bold text-brand-text text-center mb-10">Perguntas Frequentes</h2>
                     <div className="space-y-4">
                         {FAQ.map((item, i) => (
-                            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden border border-brand-primary/5">
+                            <div key={i} className="bg-brand-bg/20 rounded-xl shadow-sm overflow-hidden border border-brand-primary/5">
                                 <details className="group">
-                                    <summary className="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-brand-text hover:bg-gray-50 transition-colors">
+                                    <summary className="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-brand-text hover:bg-brand-bg/50 transition-colors">
                                         <span>{item.q}</span>
-                                        <span className="transition-transform duration-300 group-open:rotate-180">
+                                        <span className="transition-transform duration-300 group-open:rotate-180 text-brand-primary">
                                             <ChevronDown />
                                         </span>
                                     </summary>
-                                    <div className="text-gray-600 p-5 pt-0 leading-relaxed border-t border-gray-100 mt-2 animate-in slide-in-from-top-2">
+                                    <div className="text-gray-700 p-5 pt-0 leading-relaxed border-t border-brand-primary/5 mt-2 animate-in slide-in-from-top-2">
                                         {item.a}
                                     </div>
                                 </details>
@@ -257,7 +307,7 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
     const progressPercent = Math.round((currentPointsToday / totalPointsToday) * 100);
 
     return (
-        <div className="pb-24 max-w-3xl mx-auto px-4 pt-6">
+        <div className="pb-24 max-w-3xl mx-auto px-4 pt-6 font-sans">
             {/* Header / Stats */}
             <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-8 relative overflow-hidden">
                 <div className="flex justify-between items-start mb-6 relative z-10">
@@ -352,7 +402,7 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                     </p>
                     <button 
                         onClick={onUnlock}
-                        className="w-full sm:w-auto px-8 py-4 bg-white text-brand-primary rounded-xl font-bold shadow-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center mx-auto text-lg"
+                        className="w-full sm:w-auto px-8 py-4 bg-white text-brand-primary rounded-xl font-bold shadow-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center mx-auto text-lg text-brand-text"
                     >
                         Desbloquear Método Completo
                         <ArrowRight size={20} className="ml-2" />

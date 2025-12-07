@@ -1,19 +1,95 @@
 
-import { Plan, Task, AppNotification, Achievement } from './types';
+import { Plan, Task, AppNotification, Achievement, Testimonial } from './types';
 
 export const APP_NAME = "Método Sereninho";
-export const APP_SUBTITLE = "O App que transforma a rotina do seu filho em momentos de calma.";
 
 // --- SISTEMA DE NOTIFICAÇÕES ---
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
     id: "promo_flash",
     title: "Oferta Relâmpago ⚡",
-    message: "O plano Rotina Feliz (14 dias) está com 30% de desconto hoje.",
+    message: "O plano Rotina Feliz (14 dias) está com preço especial hoje.",
     link: "#pricing-section",
     linkText: "Ver Oferta",
     type: "promo"
   }
+];
+
+// --- COPYWRITING ---
+
+export const COPY = {
+    heroTitle: "Transforme Birras, Ansiedade e Conflitos em Conexão em Apenas 7 Dias",
+    heroSubtitle: "O app que guia você e seu filho com micro-hábitos simples, brincadeiras terapêuticas e rotinas emocionais que funcionam de verdade.",
+    heroSub2: "Menos telas. Mais vínculo. Mais paz na sua casa.",
+    ctaPrimary: "Visualizar 1 Dia Grátis",
+    ctaSecondary: "Ver Planos",
+    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
+};
+
+export const SCREEN_PROBLEM = {
+    title: "O que está acontecendo com o seu filho não é “frescura”",
+    subtitle: "São sinais claros de sobrecarga emocional:",
+    items: [
+        "Crises de choro aparentemente sem motivo",
+        "Birras intensas ao tirar o tablet",
+        "Dificuldade para dormir ou sono agitado",
+        "Irritabilidade, ansiedade e agressividade",
+        "Falta de concentração",
+        "Dificuldade de brincar sozinho",
+        "Apegado demais às telas"
+    ],
+    conclusion: "A verdade é: o cérebro infantil ainda não sabe organizar tantas emoções sozinho. E o excesso de tela só piora — aumenta ansiedade, reduz tolerância à frustração e dificulta o sono. O Sereninho foi criado para reverter esse ciclo."
+};
+
+export const SOLUTION_SECTION = {
+    title: "O App que devolve calma e conexão ao seu filho — usando a tecnologia a favor.",
+    items: [
+        "Regulam o emocional",
+        "Reduzem ansiedade e agitação",
+        "Diminuem birras rapidamente",
+        "Aumentam o vínculo entre vocês",
+        "Equilibram o sono sem remédios",
+        "Criam segurança emocional",
+        "Substituem telas por brincadeiras reais"
+    ]
+};
+
+export const HOW_IT_WORKS = [
+    {
+        title: "1. Receba a Missão do Dia",
+        desc: "Atividades sensoriais, brincadeiras terapêuticas e micro-hábitos organizados por fases."
+    },
+    {
+        title: "2. Brinque por Alguns Minutos",
+        desc: "Passo a passo ilustrado e fácil, mesmo para quem nunca fez nada parecido."
+    },
+    {
+        title: "3. Ganhe Estrelinhas",
+        desc: "O sistema de gamificação motiva seu filho de forma leve e saudável."
+    }
+];
+
+export const BENEFITS_LIST = [
+    "Reduz ansiedade infantil em poucos dias",
+    "Diminui birras e agressividade",
+    "Aumenta concentração e autonomia",
+    "Melhora o sono naturalmente",
+    "Diminui dependência das telas",
+    "Cria vínculo afetivo forte",
+    "Ajuda o cérebro infantil a se organizar",
+    "Torna a casa mais leve e previsível"
+];
+
+export const TESTIMONIALS: Testimonial[] = [
+    { id: "t1", text: "Meu filho dormiu a noite inteira depois de 4 dias seguindo as missões. Mudou nossa casa.", author: "Camila", childAge: "mãe do Theo (4)" },
+    { id: "t2", text: "As birras diminuíram MUITO. Conexão é pouco, agora ele pede as atividades.", author: "Juliana", childAge: "mãe da Bia (6)" },
+    { id: "t3", text: "Eu achei que não teria tempo. Hoje virou nosso momento preferido do dia.", author: "Renata", childAge: "mãe do Gui (5)" }
+];
+
+export const BONUS_LIST = [
+    { title: "Bônus 1 – Guia do Sono Tranquilo", desc: "Técnicas sensoriais e rotina noturna que regulam o sono infantil." },
+    { title: "Bônus 2 – 10 Atividades Anti-Birras", desc: "Ferramentas imediatas para reduzir crises em minutos." },
+    { title: "Bônus 3 – Mini Treinamento para Pais", desc: "Como falar, corrigir e orientar sem gritos, sem punições e sem culpa." }
 ];
 
 export const PLANS: Plan[] = [
@@ -24,12 +100,14 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 7, 
     highlight: false,
-    description: "Para crises pontuais e teste rápido.",
+    description: "Para crises pontuais ou para testar o método.",
     features: [
-        "Acesso imediato a 7 dias de atividades",
-        "Áudios guiados para as crianças",
-        "Acesso via Web App (sem download)"
-    ]
+        "✔ 7 dias de atividades",
+        "✔ Áudios guiados",
+        "✔ Acesso via Web App",
+        "✔ Entrega imediata"
+    ],
+    ctaText: "Quero Testar por 7 Dias"
   },
   { 
     id: "p14", 
@@ -40,11 +118,13 @@ export const PLANS: Plan[] = [
     highlight: true,
     description: "O favorito para criar hábito real.",
     features: [
-        "14 dias de roteiro completo",
-        "Acesso vitalício ao conteúdo",
-        "Bônus: Guia do Sono Tranquilo",
-        "Suporte por WhatsApp"
-    ]
+        "✔ 14 dias completos",
+        "✔ Acesso vitalício",
+        "✔ Guia do Sono Tranquilo",
+        "✔ Suporte por WhatsApp",
+        "✔ Atividades extras"
+    ],
+    ctaText: "Quero Criar uma Rotina Feliz"
   },
   { 
     id: "p30", 
@@ -53,14 +133,33 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 30, 
     highlight: false,
-    description: "Transformação emocional completa.",
+    description: "Transformação completa.",
     features: [
-        "30 dias de atividades transformadoras",
-        "Acesso vitalício + Atualizações",
-        "Todos os bônus incluídos",
-        "Comunidade exclusiva de mães"
-    ]
+        "✔ 30 dias de atividades",
+        "✔ Acesso vitalício + atualizações",
+        "✔ Todos os bônus",
+        "✔ Comunidade exclusiva",
+        "✔ Materiais complementares"
+    ],
+    ctaText: "Quero Transformar Minha Família"
   }
+];
+
+export const BIO = {
+    name: "Nathalia Martins",
+    role: "Psicóloga Infantil – CRP 06/12345 | Mãe da Nay",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+    story: "Depois que minha filha Nay teve sua primeira crise de ansiedade, percebi que nenhuma família precisa passar por isso sem apoio. O Sereninho nasceu como o 'botão de emergência' que eu gostaria de ter tido: simples, prático e transformador."
+};
+
+export const FAQ = [
+    { q: "Serve para qual idade?", a: "O método é ideal para crianças de 3 a 10 anos, com adaptações sugeridas para cada fase." },
+    { q: "Quanto tempo leva por dia?", a: "Menos de 10 minutos! As atividades são micro-hábitos desenhados para caber na rotina corrida." },
+    { q: "Funciona sem tirar as telas de uma vez?", a: "Sim! O objetivo é substituir gradualmente o tédio pela conexão, reduzindo a dependência naturalmente." },
+    { q: "Eu preciso participar das atividades?", a: "Sim, o método foca na conexão pais e filhos. É o seu momento de vínculo que cura." },
+    { q: "Serve para crianças com diagnóstico?", a: "O método auxilia na regulação emocional e rotina, beneficiando crianças com TDAH, TEA e Ansiedade, mas não substitui terapia." },
+    { q: "Tenho pouco tempo… dá certo para mim?", a: "Com certeza. Foi feito para pais ocupados que precisam de resultados rápidos e práticos." },
+    { q: "Como acesso o App?", a: "Acesso imediato via Web App no seu celular, sem ocupar memória." }
 ];
 
 export const TASKS_DEFAULT: Task[] = [
@@ -182,34 +281,4 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: "first_steps", name: "Primeiros Passos", condition: 20, icon: "star" },
     { id: "calm_master", name: "Mestre da Calma", condition: 100, icon: "zap" },
     { id: "zen_kid", name: "Criança Zen", condition: 300, icon: "trophy" }
-];
-
-export const COPY = {
-    heroTitle: "Troque o tempo de tela por calma e conexão.",
-    heroSubtitle: "O App que guia seu filho em 7 dias de micro-hábitos e brincadeiras para vencer a ansiedade e as birras.",
-    ctaPrimary: "Baixar App / Testar Grátis",
-    ctaSecondary: "Conhecer os Planos",
-    lockedTask: "Desbloqueie novas brincadeiras terapêuticas no App para fortalecer a confiança do seu pequeno.",
-    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
-};
-
-// --- NOVOS CONTEÚDOS SOLICITADOS ---
-
-export const BIO = {
-    name: "Nathalia Martins",
-    role: "Psicóloga Infantil e Mãe da Nay",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400", // Foto placeholder profissional
-    story: "Há 9 anos atendo famílias no consultório, mas foi quando minha filha Nay (9 anos) teve sua primeira crise de ansiedade que entendi: os pais precisam de ferramentas práticas para o dia a dia, não apenas teoria. Criei o Método Sereninho para ser o 'botão de emergência' que eu gostaria de ter tido. Um App simples, que troca o vício em telas por momentos de cura entre você e seu filho."
-};
-
-export const SCREEN_PROBLEM = {
-    title: "O celular está roubando a infância do seu filho?",
-    text: "Estudos mostram que crianças com mais de 2h de tela por dia têm 5x mais chances de desenvolver ansiedade e irritabilidade. O App Sereninho usa a tecnologia a seu favor: ele tira a criança do modo passivo e propõe atividades reais, sensoriais e de conexão com você."
-};
-
-export const FAQ = [
-    { q: "O App serve para qual idade?", a: "O método é ideal para crianças de 3 a 10 anos, com adaptações sugeridas para cada fase." },
-    { q: "Preciso pagar mensalidade?", a: "Não! O pagamento é único pelo pacote de dias escolhido. Sem assinaturas surpresas." },
-    { q: "Funciona se eu não tiver tempo?", a: "Sim! As atividades duram de 3 a 15 minutos e são desenhadas para caber na rotina corrida." },
-    { q: "Como acesso o App?", a: "É um Web App. Você recebe o acesso imediato no seu celular sem precisar baixar nada na loja de aplicativos." }
 ];

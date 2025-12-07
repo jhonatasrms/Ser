@@ -33,6 +33,7 @@ export interface Plan {
   highlight: boolean;
   description: string;
   features?: string[];
+  ctaText?: string; // New field for custom button text
 }
 
 export interface AppNotification {
@@ -49,6 +50,13 @@ export interface Achievement {
     name: string;
     condition: number;
     icon: string;
+}
+
+export interface Testimonial {
+    id: string;
+    text: string;
+    author: string;
+    childAge: string;
 }
 
 export interface AppState {
