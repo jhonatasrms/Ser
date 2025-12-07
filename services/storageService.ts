@@ -51,6 +51,12 @@ export const updateUserInDB = (updatedUser: User) => {
     localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
 };
 
+export const adminDeleteUser = (userId: string) => {
+    const users = getAllUsers();
+    const filtered = users.filter(u => u.id !== userId);
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(filtered));
+};
+
 // AUTHENTICATION
 
 export const authenticate = (email: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
