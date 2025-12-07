@@ -12,6 +12,7 @@ interface LayoutProps {
   hasUser: boolean; 
   onOpenOffers?: () => void;
   isLandingPage?: boolean;
+  notificationCount?: number;
 }
 
 export const TopBar: React.FC<LayoutProps> = ({ 
@@ -21,7 +22,8 @@ export const TopBar: React.FC<LayoutProps> = ({
   userStreak, 
   hasUser, 
   onOpenOffers,
-  isLandingPage 
+  isLandingPage,
+  notificationCount = 0
 }) => {
   return (
     <nav className="sticky top-0 z-40 w-full bg-brand-bg/95 backdrop-blur-md border-b border-brand-primary/10 shadow-sm transition-all duration-300">
@@ -43,14 +45,18 @@ export const TopBar: React.FC<LayoutProps> = ({
              {/* Only show Bell and Stats if NOT on Landing Page (User is logged in) */}
              {!isLandingPage && (
                <>
-                 {/* Notification Bell */}
+                 {/* Notification Bell with Numeric Badge */}
                  <button 
                     onClick={onOpenOffers}
                     className="relative p-2 rounded-full hover:bg-brand-primary/10 transition-colors group animate-in zoom-in"
                     aria-label="Ver ofertas"
                  >
-                    <Bell size={22} className="text-brand-primary group-hover:rotate-12 transition-transform" />
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-brand-bg rounded-full animate-pulse"></span>
+                    <Bell size={22} className={`text-brand-primary group-hover:rotate-12 transition-transform ${notificationCount > 0 ? 'animate-pulse' : ''}`} />
+                    {notificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 border-2 border-brand-bg rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+                            {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                    )}
                  </button>
 
                  {/* User Stats */}

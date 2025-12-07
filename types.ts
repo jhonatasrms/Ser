@@ -44,6 +44,7 @@ export interface AppNotification {
   link?: string; // Se tiver link, mostra botão
   linkText?: string;
   type: 'promo' | 'info' | 'success';
+  read?: boolean;
 }
 
 export interface Achievement {

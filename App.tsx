@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
 import { TrialModal, PaymentModal, OffersModal, InstallModal } from './components/Modals';
@@ -6,7 +7,7 @@ import { User, ViewState, Plan, Task, AppNotification, Achievement } from './typ
 import { 
     COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, 
     SCREEN_PROBLEM, FAQ, ACHIEVEMENTS, SOLUTION_SECTION, 
-    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST, JOURNEY_MODULES
+    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST, JOURNEY_MODULES, PUSH_LIBRARY
 } from './constants';
 import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } from './services/storageService';
 import { 
@@ -663,6 +664,7 @@ const App: React.FC = () => {
     const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [currentNotification, setCurrentNotification] = useState<AppNotification | null>(null);
+    const [notificationCount, setNotificationCount] = useState(0);
 
     // Initial Load
     useEffect(() => {
@@ -723,20 +725,27 @@ const App: React.FC = () => {
 
         window.addEventListener('hashchange', handleHashChange);
 
-        // NOTIFICATION SYSTEM TRIGGER (Only if user exists)
-        let notificationTimer: any;
+        // NOTIFICATION SYSTEM SIMULATION (Only if user exists)
+        let pushInterval: any;
         if (loadedUser) {
-            notificationTimer = setTimeout(() => {
-                const promo = PROMO_NOTIFICATIONS[0];
-                if (promo) {
-                    setCurrentNotification(promo);
-                }
+            // Initial Notification
+            setNotificationCount(1);
+            setTimeout(() => {
+                 setCurrentNotification(PROMO_NOTIFICATIONS[0]);
             }, 3000);
+
+            // Simulate incoming pushes every 45 seconds
+            pushInterval = setInterval(() => {
+                const randomPush = PUSH_LIBRARY[Math.floor(Math.random() * PUSH_LIBRARY.length)];
+                setCurrentNotification(randomPush);
+                setNotificationCount(prev => prev + 1);
+                playClickSound(); // Soft sound on notification
+            }, 45000); 
         }
 
         return () => {
             window.removeEventListener('hashchange', handleHashChange);
-            if (notificationTimer) clearTimeout(notificationTimer);
+            if (pushInterval) clearInterval(pushInterval);
         };
     }, []);
 
@@ -818,8 +827,15 @@ const App: React.FC = () => {
                     const el = document.getElementById(id);
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }
+            } else if (id === 'dashboard') {
+                 navigate('dashboard');
             }
         }
+    };
+
+    const handleOpenOffers = () => {
+        setNotificationCount(0); // Reset count on open
+        setIsOffersModalOpen(true);
     };
 
     return (
@@ -830,8 +846,9 @@ const App: React.FC = () => {
                 userPoints={user?.points} 
                 userStreak={user?.streak}
                 hasUser={!!user}
-                onOpenOffers={() => setIsOffersModalOpen(true)}
+                onOpenOffers={handleOpenOffers}
                 isLandingPage={!user}
+                notificationCount={notificationCount}
             />
             
             <main className="fade-in">
@@ -845,7 +862,7 @@ const App: React.FC = () => {
                     <DashboardView 
                         user={user} 
                         onToggleTask={handleToggleTask} 
-                        onUnlock={() => setIsOffersModalOpen(true)} 
+                        onUnlock={handleOpenOffers} 
                         onOpenInstall={() => setIsInstallModalOpen(true)}
                     />
                 )}

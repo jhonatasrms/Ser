@@ -3,7 +3,15 @@ import { Plan, Task, AppNotification, Achievement, Testimonial, DayModule } from
 
 export const APP_NAME = "Método Sereninho";
 
-// --- SISTEMA DE NOTIFICAÇÕES ---
+// --- SISTEMA DE NOTIFICAÇÕES (Push Simulator) ---
+export const PUSH_LIBRARY: AppNotification[] = [
+    { id: "push_1", title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', linkText: "Voltar agora" },
+    { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', linkText: "Manter Ofensiva" },
+    { id: "push_3", title: "🎁 Presente especial", message: "Tem um bônus secreto esperando na área de planos.", type: 'success', link: '#pricing-section', linkText: "Ver Bônus" },
+    { id: "push_4", title: "⏰ Hora da Calma", message: "3 minutinhos agora podem salvar sua noite de sono.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
+    { id: "push_5", title: "🧘‍♂️ Respire...", message: "O 'Dragão do Balão' está pronto para ajudar.", type: 'info', link: '#dashboard', linkText: "Ir para tarefa" }
+];
+
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
     id: "promo_flash",
