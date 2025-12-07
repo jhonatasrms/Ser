@@ -59,6 +59,15 @@ export interface Testimonial {
     childAge: string;
 }
 
+export interface DayModule {
+    id: string;
+    day: number;
+    title: string;
+    subtitle: string;
+    locked: boolean;
+    image: string; // Icon or bg representation
+}
+
 export interface AppState {
   view: ViewState;
   user: User | null;

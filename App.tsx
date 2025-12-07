@@ -7,13 +7,14 @@ import { User, ViewState, Plan, Task, AppNotification, Achievement } from './typ
 import { 
     COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, 
     SCREEN_PROBLEM, FAQ, ACHIEVEMENTS, SOLUTION_SECTION, 
-    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST 
+    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST, JOURNEY_MODULES
 } from './constants';
 import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } from './services/storageService';
 import { 
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
-    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote
+    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote,
+    ArrowLeft, Calendar, Unlock
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -294,8 +295,10 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
     );
 };
 
-// --- DASHBOARD VIEW (APP INTERFACE) ---
+// --- DASHBOARD VIEW (APP INTERFACE WITH JOURNEY) ---
 const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string) => void; onUnlock: () => void }> = ({ user, onToggleTask, onUnlock }) => {
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
     if (!user) return <div className="p-8 text-center text-brand-text">Preparando as brincadeiras...</div>;
 
     const todayStr = getTodayStr();
@@ -306,109 +309,151 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
     const currentPointsToday = completedTasksToday.reduce((acc, t) => acc + t.points, 0);
     const progressPercent = Math.round((currentPointsToday / totalPointsToday) * 100);
 
+    // Render TASK VIEW (If a day is selected and unlocked)
+    if (selectedDay === 1) {
+        return (
+            <div className="pb-24 max-w-3xl mx-auto px-4 pt-6 font-sans animate-in slide-in-from-right-4">
+                 <button 
+                    onClick={() => setSelectedDay(null)}
+                    className="flex items-center text-brand-primary font-bold mb-6 hover:underline"
+                 >
+                    <ArrowLeft size={20} className="mr-1" /> Voltar para a Trilha
+                 </button>
+
+                 <div className="bg-brand-card p-6 rounded-2xl mb-8 border border-brand-primary/10 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-brand-text">Dia 1: Primeiros Passos</h2>
+                        <span className="text-xs bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full font-bold">Liberado</span>
+                    </div>
+                    <div className="mb-2 flex justify-between text-xs font-bold text-brand-textSec uppercase">
+                        <span>Progresso do dia</span>
+                        <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-white rounded-full h-3 overflow-hidden border border-brand-primary/10">
+                        <div 
+                            className="bg-brand-secondary h-full rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                 </div>
+
+                 <div className="space-y-6">
+                    {TASKS_DEFAULT.map(task => (
+                        <TaskItem 
+                            key={task.id} 
+                            task={task} 
+                            isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
+                            onToggle={() => onToggleTask(task.id)}
+                            playSuccessSound={playSuccessSound}
+                            playClickSound={playClickSound}
+                        />
+                    ))}
+                </div>
+
+                <div className="mt-12 text-center p-6 bg-brand-primary/5 rounded-xl">
+                    <p className="text-brand-textSec mb-4 font-medium">Terminou as missões de hoje?</p>
+                    <button 
+                        onClick={() => setSelectedDay(null)}
+                        className="text-brand-primary font-bold border-2 border-brand-primary/20 px-6 py-2 rounded-full hover:bg-brand-primary/10 transition-colors"
+                    >
+                        Ver próximos dias
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Render MODULE JOURNEY LIST (Default view)
     return (
         <div className="pb-24 max-w-3xl mx-auto px-4 pt-6 font-sans">
-            {/* Header / Stats */}
-            <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-8 relative overflow-hidden">
-                <div className="flex justify-between items-start mb-6 relative z-10">
+             {/* Header / Stats */}
+             <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-8 relative overflow-hidden">
+                <div className="flex justify-between items-center mb-6 relative z-10">
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-text">Olá, família de {user.name}</h2>
-                        <p className="text-brand-textSec text-sm flex items-center mt-1 font-medium">
+                        <h2 className="text-xl font-bold text-brand-text">Jornada de {user.name}</h2>
+                        <p className="text-brand-textSec text-xs flex items-center mt-1 font-medium">
                             <span className={`inline-block w-2 h-2 rounded-full mr-2 ${user.plan === 'trial' ? 'bg-brand-highlight' : 'bg-brand-success'}`}></span>
-                            {user.plan === 'trial' ? 'Modo Experiência' : 'Família Sereninho'}
+                            {user.plan === 'trial' ? 'Modo Experiência (Dia 1)' : 'Plano Completo'}
                         </p>
                     </div>
-                    <div className="flex gap-4">
-                        <div className="text-center bg-orange-100/50 p-2 rounded-lg border border-orange-200/50">
-                            <div className="text-2xl font-bold text-orange-500 flex items-center justify-center">
-                                <Flame size={20} className="mr-1 fill-orange-500" />
+                    <div className="flex gap-2">
+                        <div className="text-center bg-orange-100/50 px-3 py-1.5 rounded-lg border border-orange-200/50">
+                            <div className="text-lg font-bold text-orange-500 flex items-center justify-center">
+                                <Flame size={16} className="mr-1 fill-orange-500" />
                                 {user.streak}
                             </div>
-                            <div className="text-[10px] uppercase tracking-wider text-orange-700/60 font-bold">Dias seguidos</div>
                         </div>
-                        <div className="text-right bg-brand-bg/50 p-2 rounded-lg border border-brand-primary/10">
-                            <div className="text-2xl font-bold text-brand-primary">{user.points}</div>
-                            <div className="text-[10px] uppercase tracking-wider text-brand-textSec font-bold">Estrelinhas</div>
+                        <div className="text-right bg-brand-bg/50 px-3 py-1.5 rounded-lg border border-brand-primary/10">
+                            <div className="text-lg font-bold text-brand-primary">{user.points} <span className="text-xs">pts</span></div>
                         </div>
                     </div>
                 </div>
-
-                {/* Achievements Preview */}
-                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                
+                 {/* Achievements Preview */}
+                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {ACHIEVEMENTS.map(ach => {
                         const isUnlocked = user.unlockedBadges.includes(ach.id);
                         return (
-                             <div key={ach.id} className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${isUnlocked ? 'bg-yellow-100 border-yellow-400 text-yellow-600 scale-100' : 'bg-gray-100 border-gray-200 text-gray-300 scale-90 grayscale'}`}>
-                                 <Trophy size={20} fill={isUnlocked ? "currentColor" : "none"} />
+                             <div key={ach.id} className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${isUnlocked ? 'bg-yellow-100 border-yellow-400 text-yellow-600' : 'bg-gray-100 border-gray-200 text-gray-300 scale-90 grayscale'}`}>
+                                 <Trophy size={16} fill={isUnlocked ? "currentColor" : "none"} />
                              </div>
                         )
                     })}
                 </div>
-
-                {user.plan === 'trial' && (
-                    <div className="bg-white/80 border border-brand-highlight/30 rounded-lg p-3 mb-6 flex items-center justify-between text-sm text-brand-text font-medium shadow-sm">
-                        <span>{COPY.trialBanner}</span>
-                        <button 
-                            onClick={onUnlock} 
-                            className="text-xs bg-brand-highlight text-white px-3 py-1.5 rounded-md ml-2 hover:bg-orange-600 font-bold shadow-sm transition-transform active:scale-95"
-                        >
-                            Ver Kits
-                        </button>
-                    </div>
-                )}
-
-                {/* Progress Bar */}
-                <div className="mb-2 flex justify-between text-xs font-bold text-brand-textSec uppercase">
-                    <span>Diversão do dia</span>
-                    <span>{progressPercent}%</span>
-                </div>
-                <div className="w-full bg-brand-bg rounded-full h-3 overflow-hidden border border-brand-primary/10">
-                    <div 
-                        className="bg-brand-secondary h-full rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${progressPercent}%` }}
-                    />
-                </div>
             </div>
 
-            {/* TASKS LIST (UNLOCKED / DAY 1) */}
-            <div className="space-y-6">
-                <h3 className="text-xl font-bold text-brand-text mb-2 flex items-center">
-                    <ListChecks className="mr-2 text-brand-primary" />
-                    Sua Missão de Hoje
-                </h3>
-                
-                {TASKS_DEFAULT.map(task => (
-                    <TaskItem 
-                        key={task.id} 
-                        task={task} 
-                        isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
-                        onToggle={() => onToggleTask(task.id)}
-                        playSuccessSound={playSuccessSound}
-                        playClickSound={playClickSound}
-                    />
+            <h3 className="text-lg font-bold text-brand-text mb-4 pl-1">Sua Trilha de Calma</h3>
+
+            <div className="space-y-4">
+                {JOURNEY_MODULES.map((module) => (
+                    <div 
+                        key={module.id}
+                        onClick={() => module.locked ? onUnlock() : setSelectedDay(module.day)}
+                        className={`relative rounded-2xl p-5 border-2 transition-all duration-200 cursor-pointer group ${module.locked ? 'bg-gray-50 border-gray-100 opacity-90 hover:border-brand-primary/20' : 'bg-white border-brand-primary/30 shadow-md hover:scale-[1.02]'}`}
+                    >
+                        {module.locked && (
+                            <div className="absolute top-4 right-4 bg-gray-200 p-1.5 rounded-full text-gray-500">
+                                <Lock size={16} />
+                            </div>
+                        )}
+                        {!module.locked && (
+                             <div className="absolute top-4 right-4 bg-green-100 p-1.5 rounded-full text-green-600">
+                                <Unlock size={16} />
+                            </div>
+                        )}
+
+                        <div className="flex items-start">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0 shadow-sm ${module.locked ? 'bg-gray-200 text-gray-400' : 'bg-brand-primary text-white'}`}>
+                                {module.day}
+                            </div>
+                            <div className="pr-8">
+                                <h4 className={`font-bold text-lg mb-1 ${module.locked ? 'text-gray-500' : 'text-brand-text'}`}>
+                                    {module.title}
+                                </h4>
+                                <p className="text-sm text-gray-500 leading-snug">
+                                    {module.subtitle}
+                                </p>
+                                
+                                {module.locked && (
+                                    <span className="inline-block mt-3 text-xs font-bold text-brand-primary uppercase tracking-wide border-b border-brand-primary/20 pb-0.5 group-hover:text-brand-highlight transition-colors">
+                                        Toque para liberar
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 ))}
             </div>
 
-            {/* UNLOCK CTA (Replaces locked days) */}
-            <div className="mt-12 mb-8 bg-brand-primary text-white rounded-2xl p-8 text-center shadow-xl relative overflow-hidden group border-b-8 border-[#5D4037]">
-                <div className="absolute top-0 left-0 w-full h-full bg-white/10 transform rotate-12 scale-150 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full"></div>
-                <div className="relative z-10">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                        <Lock size={32} className="text-white" />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3">Gostou das brincadeiras?</h3>
-                    <p className="text-white/90 mb-6 max-w-md mx-auto text-lg">
-                        Desbloqueie agora o acesso vitalício com 30 dias de atividades exclusivas e acabe com as birras para sempre.
-                    </p>
-                    <button 
-                        onClick={onUnlock}
-                        className="w-full sm:w-auto px-8 py-4 bg-white text-brand-primary rounded-xl font-bold shadow-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center mx-auto text-lg text-brand-text"
-                    >
-                        Desbloquear Método Completo
-                        <ArrowRight size={20} className="ml-2" />
-                    </button>
-                </div>
-            </div>
+             {/* Final CTA */}
+             <div className="mt-8 text-center">
+                <button 
+                    onClick={onUnlock}
+                    className="text-sm text-brand-textSec/60 underline hover:text-brand-primary"
+                >
+                    Liberar todos os módulos agora
+                </button>
+             </div>
         </div>
     );
 };

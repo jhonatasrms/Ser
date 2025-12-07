@@ -1,5 +1,5 @@
 
-import { Plan, Task, AppNotification, Achievement, Testimonial } from './types';
+import { Plan, Task, AppNotification, Achievement, Testimonial, DayModule } from './types';
 
 export const APP_NAME = "Método Sereninho";
 
@@ -13,6 +13,66 @@ export const PROMO_NOTIFICATIONS: AppNotification[] = [
     linkText: "Ver Oferta",
     type: "promo"
   }
+];
+
+// --- JORNADA DE MÓDULOS (Dashboard) ---
+export const JOURNEY_MODULES: DayModule[] = [
+    {
+        id: "day1",
+        day: 1,
+        title: "Kit de Primeiros Socorros Emocionais",
+        subtitle: "Aprenda as 3 técnicas vitais para acalmar seu filho em minutos.",
+        locked: false,
+        image: "unlock"
+    },
+    {
+        id: "day2",
+        day: 2,
+        title: "Fim das Birras em Público",
+        subtitle: "A técnica 'Tartaruga' para evitar escândalos no mercado ou shopping.",
+        locked: true,
+        image: "lock"
+    },
+    {
+        id: "day3",
+        day: 3,
+        title: "Sono Tranquilo e Sem Brigas",
+        subtitle: "A rotina sensorial para ele dormir sozinho no quarto dele.",
+        locked: true,
+        image: "lock"
+    },
+    {
+        id: "day4",
+        day: 4,
+        title: "Desintoxicação de Telas",
+        subtitle: "Como tirar o tablet sem gerar uma guerra nuclear em casa.",
+        locked: true,
+        image: "lock"
+    },
+    {
+        id: "day5",
+        day: 5,
+        title: "Autonomia na Hora de Comer",
+        subtitle: "Fazendo seu filho comer sem precisar de distração ou TV.",
+        locked: true,
+        image: "lock"
+    },
+    {
+        id: "day6",
+        day: 6,
+        title: "Irmãos: Do Caos à Amizade",
+        subtitle: "Atividades cooperativas para zerar as brigas entre irmãos.",
+        locked: true,
+        image: "lock"
+    },
+    {
+        id: "day7",
+        day: 7,
+        title: "Blindagem Emocional",
+        subtitle: "Como criar uma criança segura que sabe se defender e se expressar.",
+        locked: true,
+        image: "lock"
+    }
 ];
 
 // --- COPYWRITING ---
