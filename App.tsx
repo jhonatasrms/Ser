@@ -338,16 +338,23 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                  </div>
 
                  <div className="space-y-6">
-                    {TASKS_DEFAULT.map(task => (
-                        <TaskItem 
-                            key={task.id} 
-                            task={task} 
-                            isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
-                            onToggle={() => onToggleTask(task.id)}
-                            playSuccessSound={playSuccessSound}
-                            playClickSound={playClickSound}
-                        />
-                    ))}
+                    {TASKS_DEFAULT.map((task, index) => {
+                        // BLOQUEIO INTELIGENTE DO TRIAL: Tarefas com índice >= 3 (da quarta em diante) ficam bloqueadas
+                        const isLocked = user.plan === 'trial' && index >= 3;
+                        
+                        return (
+                            <TaskItem 
+                                key={task.id} 
+                                task={task} 
+                                isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
+                                onToggle={() => onToggleTask(task.id)}
+                                playSuccessSound={playSuccessSound}
+                                playClickSound={playClickSound}
+                                isLocked={isLocked}
+                                onUnlock={onUnlock}
+                            />
+                        );
+                    })}
                 </div>
 
                 <div className="mt-12 text-center p-6 bg-brand-primary/5 rounded-xl">
@@ -525,32 +532,60 @@ const TaskItem: React.FC<{
     onToggle: () => void; 
     playSuccessSound: () => void;
     playClickSound: () => void;
-}> = ({ task, isCompleted, onToggle, playSuccessSound, playClickSound }) => {
+    isLocked?: boolean;
+    onUnlock?: () => void;
+}> = ({ task, isCompleted, onToggle, playSuccessSound, playClickSound, isLocked, onUnlock }) => {
     const [expanded, setExpanded] = useState(false);
 
     const handleExpand = () => {
+        if (isLocked) {
+             if (onUnlock) onUnlock();
+             return;
+        }
         playClickSound();
         setExpanded(!expanded);
     }
 
     const handleComplete = (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (isLocked) return;
         if (!isCompleted) playSuccessSound();
         onToggle();
     };
 
     return (
-        <div className={`bg-brand-card rounded-xl border transition-all duration-300 ${isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/10' : 'border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'}`}>
+        <div 
+            className={`rounded-xl border transition-all duration-300 relative overflow-hidden
+            ${isLocked 
+                ? 'bg-gray-100 border-gray-200 opacity-90 cursor-pointer hover:border-brand-primary/20' 
+                : isCompleted 
+                    ? 'border-brand-secondary/50 bg-brand-secondary/10' 
+                    : 'bg-brand-card border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'
+            }`}
+            onClick={isLocked ? onUnlock : undefined}
+        >
+            {isLocked && (
+                <div className="absolute inset-0 z-10 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
+                    <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center text-sm font-bold text-gray-500 border border-gray-200">
+                        <Lock size={16} className="mr-2" /> Bloqueado no Trial
+                    </div>
+                </div>
+            )}
+
             <div className="p-4 flex items-center justify-between cursor-pointer group" onClick={handleExpand}>
                 <div className="flex items-center flex-1">
                      <button 
                         onClick={handleComplete}
-                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mr-4 transition-all duration-300 flex-shrink-0 active:scale-90 ${isCompleted ? 'bg-brand-secondary border-brand-secondary text-white scale-100 rotate-0' : 'border-brand-primary/30 text-transparent hover:border-brand-secondary bg-white hover:scale-105'}`}
+                        disabled={isLocked}
+                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mr-4 transition-all duration-300 flex-shrink-0 active:scale-90 
+                            ${isLocked ? 'border-gray-300 bg-gray-50' : 
+                                isCompleted ? 'bg-brand-secondary border-brand-secondary text-white scale-100 rotate-0' : 'border-brand-primary/30 text-transparent hover:border-brand-secondary bg-white hover:scale-105'}
+                        `}
                      >
                         <Star size={20} fill="currentColor" className={isCompleted ? 'opacity-100 animate-in zoom-in spin-in-180 duration-500' : 'opacity-0'} />
                      </button>
                      <div>
-                         <h4 className={`font-bold text-lg text-brand-text transition-all ${isCompleted ? 'line-through text-brand-textSec/50' : ''}`}>{task.title}</h4>
+                         <h4 className={`font-bold text-lg text-brand-text transition-all ${isCompleted ? 'line-through text-brand-textSec/50' : isLocked ? 'text-gray-500' : ''}`}>{task.title}</h4>
                          <div className="flex items-center text-xs text-brand-textSec font-medium mt-1 space-x-3">
                              <span className="flex items-center bg-white px-2 py-0.5 rounded-md border border-brand-primary/10"><Clock size={12} className="mr-1 text-brand-primary"/> {task.duration_min} min</span>
                              <span className="text-brand-highlight font-bold flex items-center"><Zap size={12} className="mr-1 fill-current"/> +{task.points} pts</span>
@@ -562,7 +597,7 @@ const TaskItem: React.FC<{
                 </div>
             </div>
             
-            {expanded && (
+            {expanded && !isLocked && (
                 <div className="px-5 pb-6 pt-0 text-sm animate-in slide-in-from-top-2 fade-in duration-300">
                     {task.image && (
                         <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner">
