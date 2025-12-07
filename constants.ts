@@ -2,23 +2,17 @@
 import { Plan, Task, AppNotification } from './types';
 
 export const APP_NAME = "Método Sereninho";
-export const APP_SUBTITLE = "Transforme a ansiedade do seu filho em momentos de calma e conexão.";
+export const APP_SUBTITLE = "O App que transforma a rotina do seu filho em momentos de calma.";
 
 // --- SISTEMA DE NOTIFICAÇÕES ---
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
     id: "promo_flash",
-    title: "Escola sem choro? 🎒",
-    message: "Desbloqueie o módulo 'Volta às aulas tranquila' no plano de 14 dias.",
-    link: "#pricing",
+    title: "Oferta Relâmpago ⚡",
+    message: "O plano Rotina Feliz (14 dias) está com 30% de desconto hoje.",
+    link: "#pricing-section",
     linkText: "Ver Oferta",
     type: "promo"
-  },
-  {
-    id: "dica_dia",
-    title: "Dica de Mãe",
-    message: "O abraço de urso libera oxitocina e acalma o choro em segundos.",
-    type: "info"
   }
 ];
 
@@ -30,7 +24,7 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 7, 
     highlight: false,
-    description: "Para crises pontuais e teste."
+    description: "Para crises pontuais e teste rápido."
   },
   { 
     id: "p14", 
@@ -39,7 +33,7 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 14, 
     highlight: true,
-    description: "O favorito das mães para criar hábito."
+    description: "O favorito para criar hábito real."
   },
   { 
     id: "p30", 
@@ -118,60 +112,35 @@ export const TASKS_DEFAULT: Task[] = [
       "1 coisa gostosa de comer (paladar).",
       "Dê os parabéns a cada descoberta!"
     ]
-  },
-  { 
-    id: "t5", 
-    title: "Abraço de Urso", 
-    points: 10, 
-    duration_min: 2, 
-    why: "A pressão profunda libera oxitocina, o hormônio do amor e segurança.", 
-    benefits: ["Segurança", "Vínculo"],
-    image: "https://images.unsplash.com/photo-1544098485-2a2a4b9d0b8d?auto=format&fit=crop&q=80&w=600",
-    steps: [
-      "Ajoelhe-se na altura da criança.",
-      "Abra os braços bem grandes e diga 'Lá vem o urso!'.",
-      "Dê um abraço bem apertado e conte até 10 segundos.",
-      "Peça para ela apertar de volta com força.",
-      "Solte devagar e sorria."
-    ]
-  },
-  { 
-    id: "t6", 
-    title: "Tenda da Coragem", 
-    points: 40, 
-    duration_min: 20, 
-    why: "Criar um refúgio seguro ajuda a criança a ter para onde ir quando sentir medo.", 
-    benefits: ["Autonomia", "Segurança"],
-    image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=600",
-    steps: [
-      "Usem lençóis, cadeiras e almofadas para montar uma cabaninha na sala.",
-      "Levem lanternas e os brinquedos favoritos.",
-      "Entrem na tenda e contem uma história onde a criança é a heroína.",
-      "Deixe a tenda montada por um tempo como 'zona segura'."
-    ]
-  },
-  { 
-    id: "t7", 
-    title: "Massagem da Formiguinha", 
-    points: 10, 
-    duration_min: 5, 
-    why: "Relaxamento muscular progressivo antes de dormir.", 
-    benefits: ["Sono Tranquilo", "Relaxamento"],
-    image: "https://images.unsplash.com/photo-1512552278912-87009fc22649?auto=format&fit=crop&q=80&w=600",
-    steps: [
-      "Com a criança deitada, use os dedos para simular formiguinhas caminhando.",
-      "Comece pelos pés, subindo pelas pernas, costas e braços.",
-      "Diga: 'As formiguinhas estão levando todo o cansaço embora'.",
-      "Termine com um carinho na cabeça."
-    ]
   }
 ];
 
 export const COPY = {
-    heroTitle: "Seu filho mais calmo, confiante e feliz em 7 dias.",
-    heroSubtitle: "O fim das crises de ansiedade e birras através de brincadeiras guiadas e conexão emocional.",
-    ctaPrimary: "Testar com meu filho hoje",
-    ctaSecondary: "Conhecer o método",
-    lockedTask: "Desbloqueie novas brincadeiras terapêuticas para fortalecer a confiança do seu pequeno.",
-    trialBanner: "Dia 1 Liberado: Comece a transformar o ambiente da sua casa agora."
+    heroTitle: "Troque o tempo de tela por calma e conexão.",
+    heroSubtitle: "O App que guia seu filho em 7 dias de micro-hábitos e brincadeiras para vencer a ansiedade e as birras.",
+    ctaPrimary: "Baixar App / Testar Grátis",
+    ctaSecondary: "Conhecer os Planos",
+    lockedTask: "Desbloqueie novas brincadeiras terapêuticas no App para fortalecer a confiança do seu pequeno.",
+    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
 };
+
+// --- NOVOS CONTEÚDOS SOLICITADOS ---
+
+export const BIO = {
+    name: "Nathalia Martins",
+    role: "Psicóloga Infantil e Mãe da Nay",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400", // Foto placeholder profissional
+    story: "Há 9 anos atendo famílias no consultório, mas foi quando minha filha Nay (9 anos) teve sua primeira crise de ansiedade que entendi: os pais precisam de ferramentas práticas para o dia a dia, não apenas teoria. Criei o Método Sereninho para ser o 'botão de emergência' que eu gostaria de ter tido. Um App simples, que troca o vício em telas por momentos de cura entre você e seu filho."
+};
+
+export const SCREEN_PROBLEM = {
+    title: "O celular está roubando a infância do seu filho?",
+    text: "Estudos mostram que crianças com mais de 2h de tela por dia têm 5x mais chances de desenvolver ansiedade e irritabilidade. O App Sereninho usa a tecnologia a seu favor: ele tira a criança do modo passivo e propõe atividades reais, sensoriais e de conexão com você."
+};
+
+export const FAQ = [
+    { q: "O App serve para qual idade?", a: "O método é ideal para crianças de 3 a 10 anos, com adaptações sugeridas para cada fase." },
+    { q: "Preciso pagar mensalidade?", a: "Não! O pagamento é único pelo pacote de dias escolhido. Sem assinaturas surpresas." },
+    { q: "Funciona se eu não tiver tempo?", a: "Sim! As atividades duram de 3 a 15 minutos e são desenhadas para caber na rotina corrida." },
+    { q: "Como acesso o App?", a: "É um Web App. Você recebe o acesso imediato no seu celular sem precisar baixar nada na loja de aplicativos." }
+];

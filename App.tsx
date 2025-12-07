@@ -1,98 +1,236 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
 import { TrialModal, PaymentModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { User, ViewState, Plan, Task, AppNotification } from './types';
-import { COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS } from './constants';
+import { COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, SCREEN_PROBLEM, FAQ } from './constants';
 import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } from './services/storageService';
 import { 
-    Play, ShieldCheck, Star, Users, ArrowRight, Lock, 
-    Clock, CheckSquare, ChevronDown, ChevronUp, Zap, Trophy,
-    Calendar, CheckCircle2, ListChecks, Heart, Smile
+    Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
+    Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
 
-// --- HOME VIEW ---
-const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> = ({ onStartTrial, onViewPlans }) => {
+// --- HOME VIEW (LANDING PAGE) ---
+const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => void }> = ({ onStartTrial, onSelectPlan }) => {
+    
+    const scrollToPricing = () => {
+        const section = document.getElementById('pricing-section');
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+    };
+
     return (
         <div className="pb-24">
-            {/* Hero */}
-            <header className="relative overflow-hidden pt-8 pb-20 lg:pt-16 lg:pb-28">
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/50 border border-brand-primary/20 text-brand-primary text-xs font-bold uppercase tracking-wide mb-6 shadow-sm">
-                        <Smile size={14} className="mr-2" /> Para crianças de 3 a 10 anos
-                    </div>
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-brand-text tracking-tight mb-6 leading-tight">
-                        {COPY.heroTitle}
-                    </h1>
-                    <p className="text-lg md:text-xl text-brand-textSec max-w-2xl mx-auto mb-10 leading-relaxed font-medium opacity-90">
-                        {COPY.heroSubtitle}
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-                        <button 
-                            onClick={onStartTrial}
-                            className="w-full sm:w-auto px-8 py-4 bg-brand-primary text-white rounded-xl font-bold shadow-xl shadow-brand-primary/20 hover:bg-[#A0522D] transition-transform active:scale-95 flex items-center justify-center border-b-4 border-[#5D4037]"
-                        >
-                            <Heart size={20} className="mr-2 fill-current" />
-                            {COPY.ctaPrimary}
-                        </button>
-                        <button 
-                            onClick={onViewPlans}
-                            className="w-full sm:w-auto px-8 py-4 bg-brand-card text-brand-primary border border-brand-primary/30 rounded-xl font-bold hover:bg-white transition-colors"
-                        >
-                            {COPY.ctaSecondary}
-                        </button>
+            {/* Hero Section */}
+            <header className="relative pt-10 pb-20 px-4 text-center max-w-4xl mx-auto">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/60 border border-brand-primary/20 text-brand-primary text-xs font-bold uppercase tracking-wide mb-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+                    <Smile size={14} className="mr-2" /> Web App para crianças de 3 a 10 anos
+                </div>
+                <h1 className="text-4xl md:text-6xl font-extrabold text-brand-text tracking-tight mb-6 leading-[1.1]">
+                    {COPY.heroTitle}
+                </h1>
+                <p className="text-lg md:text-xl text-brand-textSec max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                    {COPY.heroSubtitle}
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button 
+                        onClick={onStartTrial}
+                        className="w-full sm:w-auto px-8 py-4 bg-brand-primary text-white rounded-xl font-bold shadow-xl shadow-brand-primary/20 hover:bg-[#A0522D] transition-transform active:scale-95 flex items-center justify-center border-b-4 border-[#5D4037] text-lg"
+                    >
+                        <PlayCircle size={22} className="mr-2 fill-current" />
+                        {COPY.ctaPrimary}
+                    </button>
+                    <button 
+                        onClick={scrollToPricing}
+                        className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-brand-primary/30 text-brand-primary rounded-xl font-bold hover:bg-brand-primary/5 transition-colors text-lg"
+                    >
+                        {COPY.ctaSecondary}
+                    </button>
+                </div>
+                {/* App Mockup Hint */}
+                <div className="mt-12 opacity-80">
+                    <p className="text-xs text-brand-textSec font-semibold uppercase tracking-widest mb-2">Compatível com</p>
+                    <div className="flex justify-center gap-4 text-brand-primary/60">
+                         <span className="flex items-center gap-1"><Smartphone size={16}/> iOS</span>
+                         <span className="flex items-center gap-1"><Smartphone size={16}/> Android</span>
+                         <span className="flex items-center gap-1"><Smartphone size={16}/> Tablet</span>
                     </div>
                 </div>
             </header>
 
-            {/* Benefits */}
-            <section className="py-16 bg-brand-card/50 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="text-center mb-12">
-                         <h2 className="text-2xl font-bold text-brand-text mb-2">Por que funciona?</h2>
-                         <div className="w-16 h-1 bg-brand-primary mx-auto rounded-full opacity-30"></div>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            { icon: <Clock className="text-brand-primary" />, title: "Rápido e Divertido", desc: "Brincadeiras de 5 minutos que cabem na rotina escolar." },
-                            { icon: <Smile className="text-brand-highlight" />, title: "Lúdico", desc: "Seu filho aprende a lidar com emoções brincando, sem sermão." },
-                            { icon: <Heart className="text-red-500" />, title: "Conexão Real", desc: "Momentos de qualidade que fortalecem o vínculo pais e filhos." }
-                        ].map((b, i) => (
-                            <div key={i} className="p-6 rounded-2xl bg-brand-bg border border-brand-primary/10 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="mb-4 p-3 bg-white rounded-full w-fit shadow-sm text-brand-primary">{b.icon}</div>
-                                <h3 className="text-xl font-bold text-brand-text mb-2">{b.title}</h3>
-                                <p className="text-brand-textSec">{b.desc}</p>
+            {/* PROBLEM SECTION: Screen Time */}
+            <section className="py-20 bg-brand-primary/5 border-y border-brand-primary/10">
+                <div className="max-w-4xl mx-auto px-4">
+                    <div className="flex flex-col md:flex-row items-center gap-12">
+                        <div className="md:w-1/2 relative">
+                            <div className="absolute inset-0 bg-red-500/10 blur-3xl rounded-full"></div>
+                            <div className="relative bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-400">
+                                <AlertTriangle className="text-red-500 mb-4" size={40} />
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Alerta de Pais</h3>
+                                <p className="text-gray-600 italic">"Meu filho fica agressivo quando tiro o tablet..."</p>
+                                <p className="text-gray-600 italic mt-2">"Ele não consegue mais brincar sozinho."</p>
                             </div>
-                        ))}
+                        </div>
+                        <div className="md:w-1/2">
+                            <h2 className="text-3xl font-bold text-brand-text mb-6">{SCREEN_PROBLEM.title}</h2>
+                            <p className="text-brand-textSec text-lg leading-relaxed mb-6">
+                                {SCREEN_PROBLEM.text}
+                            </p>
+                            <ul className="space-y-3">
+                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Menos telas, mais olho no olho.</li>
+                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Atividades sensoriais reais.</li>
+                                <li className="flex items-center text-brand-text font-medium"><CheckCircle2 className="text-green-600 mr-2" size={20}/> Sono regulado naturalmente.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* How it works */}
-            <section className="py-20">
+            {/* BIO SECTION: Quem sou eu */}
+            <section className="py-20 bg-white">
+                <div className="max-w-4xl mx-auto px-4">
+                    <div className="flex flex-col md:flex-row items-center gap-10">
+                         <div className="md:w-1/3">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-brand-bg rounded-2xl transform rotate-6"></div>
+                                <img 
+                                    src={BIO.image} 
+                                    alt={BIO.name} 
+                                    className="relative rounded-2xl shadow-lg w-full object-cover aspect-[3/4] border-4 border-white"
+                                />
+                                <div className="absolute -bottom-4 -right-4 bg-brand-primary text-white p-3 rounded-lg shadow-lg text-center">
+                                    <p className="font-bold text-sm">CRP 06/12345</p>
+                                </div>
+                            </div>
+                         </div>
+                         <div className="md:w-2/3">
+                             <span className="text-brand-primary font-bold tracking-wider uppercase text-sm mb-2 block">Quem criou o método?</span>
+                             <h2 className="text-3xl font-bold text-brand-text mb-2">{BIO.name}</h2>
+                             <p className="text-brand-textSec font-medium mb-6">{BIO.role}</p>
+                             <div className="prose prose-brown text-brand-textSec leading-relaxed">
+                                 <p>"{BIO.story}"</p>
+                             </div>
+                             <div className="mt-8 flex items-center gap-4">
+                                 <div className="flex -space-x-2">
+                                     {[1,2,3].map(i => (
+                                         <div key={i} className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500">Mãe</div>
+                                     ))}
+                                 </div>
+                                 <p className="text-sm text-gray-500 font-medium">+ de 2.000 famílias ajudadas</p>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* HOW IT WORKS */}
+            <section className="py-20 bg-brand-bg">
                 <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-brand-text mb-12">Como transformar a rotina</h2>
-                    <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
-                         <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">1</div>
-                             <h4 className="font-bold text-lg text-brand-text">Acesso Gratuito</h4>
-                             <p className="text-sm text-brand-textSec mt-2 px-4">Receba a primeira missão do dia imediatamente.</p>
+                    <h2 className="text-3xl font-bold text-brand-text mb-12">Como o App funciona?</h2>
+                    <div className="grid md:grid-cols-3 gap-8">
+                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10">
+                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
+                                 <Smartphone size={24} />
+                             </div>
+                             <h3 className="font-bold text-lg mb-2">1. Receba a Missão</h3>
+                             <p className="text-sm text-gray-600">Todo dia uma nova atividade desbloqueada no seu painel.</p>
                          </div>
-                         <div className="hidden md:block w-16 h-1 bg-brand-primary/20 mx-4"></div>
-                         <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">2</div>
-                             <h4 className="font-bold text-lg text-brand-text">Missão Diária</h4>
-                             <p className="text-sm text-brand-textSec mt-2 px-4">Realize a atividade lúdica com seu filho.</p>
+                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10">
+                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
+                                 <Smile size={24} />
+                             </div>
+                             <h3 className="font-bold text-lg mb-2">2. Brinque Junto</h3>
+                             <p className="text-sm text-gray-600">Siga o passo a passo ilustrado. Leva menos de 15 minutos.</p>
                          </div>
-                         <div className="hidden md:block w-16 h-1 bg-brand-primary/20 mx-4"></div>
-                         <div className="flex-1 flex flex-col items-center">
-                             <div className="w-16 h-16 rounded-full bg-brand-card flex items-center justify-center text-2xl font-bold text-brand-primary shadow-sm mb-4 border-2 border-brand-primary/20">3</div>
-                             <h4 className="font-bold text-lg text-brand-text">Lar em Paz</h4>
-                             <p className="text-sm text-brand-textSec mt-2 px-4">Veja a ansiedade diminuir dia após dia.</p>
+                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10">
+                             <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
+                                 <Star size={24} />
+                             </div>
+                             <h3 className="font-bold text-lg mb-2">3. Ganhe Estrelinhas</h3>
+                             <p className="text-sm text-gray-600">Complete a rotina e veja seu filho evoluir no "Gamification".</p>
                          </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* PRICING SECTION */}
+            <section id="pricing-section" className="py-20 bg-brand-card border-t border-brand-primary/10">
+                <div className="max-w-5xl mx-auto px-4">
+                     <div className="text-center mb-12">
+                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">Planos de Acesso ao App</h2>
+                         <p className="text-brand-textSec">Escolha por quanto tempo quer transformar a rotina da sua casa.</p>
+                     </div>
+
+                     <div className="grid md:grid-cols-3 gap-6">
+                         {PLANS.map(plan => (
+                             <div 
+                                key={plan.id} 
+                                className={`relative bg-white rounded-2xl p-6 border-2 flex flex-col transition-all hover:shadow-xl ${plan.highlight ? 'border-brand-primary shadow-2xl scale-105 z-10' : 'border-transparent shadow-md hover:border-brand-primary/30'}`}
+                             >
+                                 {plan.highlight && (
+                                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-xs font-bold uppercase py-1.5 px-4 rounded-full shadow-md whitespace-nowrap">
+                                         Mais Vendido
+                                     </div>
+                                 )}
+                                 <div className="mb-4 text-center">
+                                     <h3 className="text-xl font-bold text-brand-text">{plan.name}</h3>
+                                     <p className="text-xs text-brand-textSec font-medium mt-1 uppercase tracking-wide">{plan.description}</p>
+                                 </div>
+                                 <div className="mb-6 text-center">
+                                     <span className="text-4xl font-extrabold text-brand-text">R$ {plan.price}</span>
+                                     <span className="text-brand-textSec/60 font-medium text-sm block mt-1">pagamento único</span>
+                                 </div>
+                                 
+                                 <ul className="space-y-3 mb-8 flex-1 px-2">
+                                     <li className="flex items-start text-sm text-gray-700">
+                                         <CheckCircle2 size={16} className="text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                                         <span>Acesso completo por <strong>{plan.days} dias</strong></span>
+                                     </li>
+                                     <li className="flex items-start text-sm text-gray-700">
+                                         <CheckCircle2 size={16} className="text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                                         <span>Todas as brincadeiras e guias</span>
+                                     </li>
+                                     {plan.days > 7 && (
+                                        <li className="flex items-start text-sm text-gray-700">
+                                            <CheckCircle2 size={16} className="text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                                            <span>Bônus: Manual do Sono</span>
+                                        </li>
+                                     )}
+                                 </ul>
+
+                                 <button 
+                                    onClick={() => onSelectPlan(plan)}
+                                    className={`w-full py-4 rounded-xl font-bold transition-all border-b-4 active:border-b-0 active:translate-y-1 ${plan.highlight ? 'bg-green-600 text-white border-green-800 hover:bg-green-700' : 'bg-brand-bg text-brand-text border-brand-primary/20 hover:bg-brand-primary/10'}`}
+                                 >
+                                     Comprar Agora
+                                 </button>
+                             </div>
+                         ))}
+                     </div>
+                </div>
+            </section>
+
+            {/* FAQ SECTION */}
+            <section className="py-20 bg-brand-bg">
+                <div className="max-w-3xl mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-brand-text text-center mb-10">Perguntas Frequentes</h2>
+                    <div className="space-y-4">
+                        {FAQ.map((item, i) => (
+                            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden border border-brand-primary/5">
+                                <details className="group">
+                                    <summary className="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-brand-text">
+                                        <span>{item.q}</span>
+                                        <span className="transition group-open:rotate-180">
+                                            <ChevronDown />
+                                        </span>
+                                    </summary>
+                                    <div className="text-gray-600 p-5 pt-0 leading-relaxed border-t border-gray-100 mt-2">
+                                        {item.a}
+                                    </div>
+                                </details>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -100,7 +238,7 @@ const HomeView: React.FC<{ onStartTrial: () => void; onViewPlans: () => void }> 
     );
 };
 
-// --- DASHBOARD VIEW ---
+// --- DASHBOARD VIEW (APP INTERFACE) ---
 const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string) => void; onUnlock: () => void }> = ({ user, onToggleTask, onUnlock }) => {
     if (!user) return <div className="p-8 text-center text-brand-text">Preparando as brincadeiras...</div>;
 
@@ -151,11 +289,6 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
-                {progressPercent === 100 && (
-                    <p className="mt-2 text-xs text-brand-success font-bold text-center animate-pulse flex items-center justify-center">
-                        <Star size={12} className="mr-1 fill-current" /> Vocês são incríveis! Dia concluído!
-                    </p>
-                )}
             </div>
 
             {/* Days Feed */}
@@ -167,8 +300,8 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                         return (
                             <div key={day} className="relative group">
                                 <div className="absolute inset-0 bg-brand-bg/40 backdrop-blur-[2px] z-10 rounded-2xl flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-brand-primary/20">
-                                    <Lock className="text-brand-primary/40 mb-3" size={32} />
-                                    <h3 className="font-bold text-brand-text mb-2">Dia {day}: Novas Aventuras</h3>
+                                    <ShieldCheck className="text-brand-primary/40 mb-3" size={32} />
+                                    <h3 className="font-bold text-brand-text mb-2">Dia {day}: Novas Aventuras Bloqueadas</h3>
                                     <p className="text-brand-textSec text-sm max-w-xs mb-4 font-medium">{COPY.lockedTask}</p>
                                     <button 
                                         onClick={onUnlock}
@@ -279,76 +412,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
     );
 };
 
-// --- PRICING VIEW ---
-const PricingView: React.FC<{ onSelectPlan: (plan: Plan) => void }> = ({ onSelectPlan }) => {
-    return (
-        <div className="pt-8 pb-24 max-w-5xl mx-auto px-4">
-             <div className="text-center mb-12">
-                 <h2 className="text-3xl font-bold text-brand-text mb-4">Escolha a paz da sua família</h2>
-                 <p className="text-brand-textSec">Garantia total de 7 dias. Se não ajudar, devolvemos tudo.</p>
-             </div>
-
-             <div className="grid md:grid-cols-3 gap-6">
-                 {PLANS.map(plan => (
-                     <div 
-                        key={plan.id} 
-                        className={`relative bg-brand-card rounded-2xl p-6 border-2 flex flex-col transition-transform hover:-translate-y-1 ${plan.highlight ? 'border-brand-primary shadow-xl shadow-brand-primary/10 scale-105 z-10' : 'border-transparent shadow-md'}`}
-                     >
-                         {plan.highlight && (
-                             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-primary text-white text-xs font-bold uppercase py-1.5 px-4 rounded-full shadow-md">
-                                 Mais Escolhido pelas Mães
-                             </div>
-                         )}
-                         <div className="mb-4">
-                             <h3 className="text-xl font-bold text-brand-text">{plan.name}</h3>
-                             <p className="text-sm text-brand-textSec font-medium mt-1">{plan.description}</p>
-                         </div>
-                         <div className="mb-6">
-                             <span className="text-4xl font-extrabold text-brand-text">R$ {plan.price}</span>
-                             <span className="text-brand-textSec/60 font-medium text-sm block mt-1">pagamento único</span>
-                         </div>
-                         
-                         <ul className="space-y-4 mb-8 flex-1">
-                             <li className="flex items-start text-sm text-brand-textSec font-medium">
-                                 <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
-                                 <span>{plan.days} dias de brincadeiras guiadas</span>
-                             </li>
-                             <li className="flex items-start text-sm text-brand-textSec font-medium">
-                                 <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
-                                 <span>Acesso ao painel da família</span>
-                             </li>
-                             {plan.days > 7 && (
-                                <li className="flex items-start text-sm text-brand-textSec font-medium">
-                                    <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
-                                    <span>Certificados de coragem</span>
-                                </li>
-                             )}
-                             {plan.days === 30 && (
-                                <li className="flex items-start text-sm text-brand-textSec font-medium">
-                                    <CheckCircle2 size={18} className="text-brand-secondary mr-2 flex-shrink-0" />
-                                    <span>Suporte via WhatsApp</span>
-                                </li>
-                             )}
-                         </ul>
-
-                         <button 
-                            onClick={() => onSelectPlan(plan)}
-                            className={`w-full py-3.5 rounded-xl font-bold transition-colors border-b-4 active:border-b-0 active:translate-y-1 ${plan.highlight ? 'bg-brand-primary text-white border-[#5D4037] hover:bg-[#A0522D]' : 'bg-white text-brand-text border-gray-200 hover:bg-gray-50'}`}
-                         >
-                             Quero este kit
-                         </button>
-                     </div>
-                 ))}
-             </div>
-
-             <div className="mt-12 p-6 bg-brand-card/50 rounded-xl text-center border border-brand-primary/10">
-                 <ShieldCheck className="mx-auto text-brand-primary mb-2" size={32} />
-                 <p className="text-sm text-brand-textSec font-medium">Compra segura e garantia de satisfação.</p>
-             </div>
-        </div>
-    );
-};
-
 // --- MAIN APP COMPONENT ---
 const App: React.FC = () => {
     const [view, setView] = useState<ViewState>('home');
@@ -362,44 +425,42 @@ const App: React.FC = () => {
     useEffect(() => {
         const loadedUser = getInitialUser();
         if (loadedUser) {
-            const updatedUser = checkStreak(loadedUser); // Check for daily reset logic
+            const updatedUser = checkStreak(loadedUser);
             setUser(updatedUser);
-            // If user exists, go to dashboard by default if hash is empty or dashboard
-            if (window.location.hash === '#dashboard' || window.location.hash === '') {
+            if (window.location.hash === '#dashboard') {
                 setView('dashboard');
             }
         } else {
-             // If no user, ensure we are not on dashboard
-             if (window.location.hash === '#dashboard') {
-                 setView('home');
-                 window.location.hash = 'home';
+             // If no user, ensure we are home
+             if (window.location.hash !== '') {
+                 window.location.hash = '';
              }
         }
         
-        // Simple hash router listener
         const handleHashChange = () => {
-            const hash = window.location.hash.replace('#', '') as ViewState;
+            // Fix: Treat hash as string initially to avoid type errors when comparing to empty string
+            const hash = window.location.hash.replace('#', '');
             
-            // Protect Dashboard route
             if (hash === 'dashboard' && !getInitialUser()) {
                  setView('home');
-                 setIsTrialModalOpen(true); // Prompt them to sign up
+                 setIsTrialModalOpen(true);
                  return;
             }
 
-            if (['home', 'dashboard', 'pricing'].includes(hash)) {
-                setView(hash);
+            // Fix: Handle hash routing safe type comparison
+            if (hash === '' || hash === 'home') {
+                setView('home');
+            } else if (hash === 'dashboard') {
+                setView('dashboard');
+            } else if (hash === 'pricing') {
+                setView('pricing');
             }
         };
 
         window.addEventListener('hashchange', handleHashChange);
-        handleHashChange(); // Run once
 
         // NOTIFICATION SYSTEM TRIGGER
-        // Simulate a "push" notification after 3 seconds
         const notificationTimer = setTimeout(() => {
-            // Logic: Pick the first promo notification for demo purposes
-            // In a real app, you could check localStorage to see which were already dismissed
             const promo = PROMO_NOTIFICATIONS[0];
             if (promo) {
                 setCurrentNotification(promo);
@@ -435,15 +496,12 @@ const App: React.FC = () => {
 
     const handleToggleTask = (taskId: string) => {
         if (!user) return;
-        
         const todayStr = getTodayStr();
         const key = `${todayStr}_${taskId}`;
         const task = TASKS_DEFAULT.find(t => t.id === taskId);
         if (!task) return;
 
         const isCompleted = !!user.completedTasks[key];
-        
-        // Update user state locally
         const updatedTasks = { ...user.completedTasks };
         let newPoints = user.points;
 
@@ -461,16 +519,14 @@ const App: React.FC = () => {
     };
 
     const handleNotificationAction = (link: string) => {
-        // Close notification
         setCurrentNotification(null);
-        
-        // Handle internal links
         if (link.startsWith('#')) {
-            const viewName = link.replace('#', '') as ViewState;
-            navigate(viewName);
-        } else {
-            // External
-            window.open(link, '_blank');
+            // Scroll to element if on home
+            if (view === 'home') {
+                const id = link.replace('#', '');
+                const el = document.getElementById(id);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }
         }
     };
 
@@ -487,19 +543,23 @@ const App: React.FC = () => {
                 {view === 'home' && (
                     <HomeView 
                         onStartTrial={() => setIsTrialModalOpen(true)} 
-                        onViewPlans={() => navigate('pricing')} 
+                        onSelectPlan={handlePlanSelect} 
                     />
                 )}
                 {view === 'dashboard' && (
                     <DashboardView 
                         user={user} 
                         onToggleTask={handleToggleTask} 
-                        onUnlock={() => navigate('pricing')} 
+                        onUnlock={() => {
+                            // Since pricing is now on home, we might want a modal or redirect
+                            // For simplicity, redirect to home pricing section (simulating logout/landing view or opening payment modal)
+                            // A better UX for logged in users might be to open the payment modal directly for the recommended plan
+                            setSelectedPlan(PLANS[1]);
+                            setIsPaymentModalOpen(true);
+                        }} 
                     />
                 )}
-                {view === 'pricing' && (
-                    <PricingView onSelectPlan={handlePlanSelect} />
-                )}
+                {/* Removed standalone PricingView, merged into HomeView */}
             </main>
 
             <BottomNav currentView={view} onNavigate={navigate} hasUser={!!user} />
@@ -523,11 +583,13 @@ const App: React.FC = () => {
             />
 
             {/* Footer */}
-            {view === 'home' && (
-                <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12">
-                    <p>© 2024 Método Sereninho. Feito com carinho para famílias.</p>
-                </footer>
-            )}
+            <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
+                <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
+                <div className="mt-2 space-x-4">
+                    <span className="hover:text-brand-primary cursor-pointer">Termos de Uso</span>
+                    <span className="hover:text-brand-primary cursor-pointer">Política de Privacidade</span>
+                </div>
+            </footer>
         </div>
     );
 };
