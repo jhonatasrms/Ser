@@ -756,9 +756,12 @@ const App: React.FC = () => {
                         user={user} 
                         onToggleTask={handleToggleTask} 
                         onUnlock={() => {
-                            // Open payment modal directly for the recommended plan (14 days)
-                            setSelectedPlan(PLANS[1]);
-                            setIsPaymentModalOpen(true);
+                            // Redirect to pricing section in home view
+                            navigate('home');
+                            setTimeout(() => {
+                                const section = document.getElementById('pricing-section');
+                                if (section) section.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
                         }} 
                     />
                 )}
