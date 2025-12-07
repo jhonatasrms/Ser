@@ -1,9 +1,11 @@
 
-export type ViewState = 'home' | 'dashboard' | 'pricing';
+export type ViewState = 'home' | 'dashboard' | 'pricing' | 'login' | 'admin';
 
 export interface User {
+  id?: string; // Added ID for management
   name: string;
   whatsapp: string;
+  email?: string; // Added email for login simulation
   plan: 'trial' | 'pro' | 'expired';
   trialEndDate: string; // ISO Date string
   points: number;
@@ -48,6 +50,7 @@ export interface AppNotification {
   type: 'promo' | 'info' | 'success';
   read?: boolean;
   timestamp?: number; // New field for history
+  isGlobal?: boolean; // Sent by admin
 }
 
 export interface Achievement {

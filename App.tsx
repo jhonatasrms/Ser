@@ -1,26 +1,27 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
 import { TrialModal, PaymentModal, OffersModal, InstallModal, NotificationsHistoryModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
+import { LoginView } from './components/LoginView';
+import { AdminPanel } from './components/AdminPanel';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
 import { 
     COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, 
     SCREEN_PROBLEM, FAQ, ACHIEVEMENTS, SOLUTION_SECTION, 
     HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST, JOURNEY_MODULES, PUSH_LIBRARY
 } from './constants';
-import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } from './services/storageService';
+import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser, getLatestGlobalNotification } from './services/storageService';
 import { 
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
     Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote,
-    ArrowLeft, Calendar, Unlock, Download, ShoppingBag
+    ArrowLeft, Calendar, Unlock, Download, ShoppingBag, UserCircle
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
 
 // --- HOME VIEW (LANDING PAGE) ---
-const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => void }> = ({ onStartTrial, onSelectPlan }) => {
+const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => void; onGoToLogin: () => void }> = ({ onStartTrial, onSelectPlan, onGoToLogin }) => {
     
     const scrollToPricing = () => {
         const section = document.getElementById('contents-section');
@@ -286,11 +287,23 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                     </div>
                 </div>
             </section>
+
+            <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
+                <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
+                <div className="mt-2 space-x-4 flex justify-center items-center">
+                    <span className="hover:text-brand-primary cursor-pointer transition-colors">Termos de Uso</span>
+                    <span className="hover:text-brand-primary cursor-pointer transition-colors">Política de Privacidade</span>
+                    <span className="text-gray-300">|</span>
+                    <button onClick={onGoToLogin} className="hover:text-brand-primary flex items-center gap-1">
+                        <UserCircle size={12} /> Área do Cliente
+                    </button>
+                </div>
+            </footer>
         </div>
     );
 };
 
-// --- CONTENT GRID VIEW (Reused logic from Home's Content Section) ---
+// --- CONTENT GRID VIEW ---
 const ContentGridView: React.FC<{ onSelectPlan: (p: Plan) => void }> = ({ onSelectPlan }) => {
     return (
         <div className="pb-24 pt-10 font-sans">
@@ -522,180 +535,12 @@ const DashboardView: React.FC<{
     );
 };
 
-// --- AUDIO HELPERS ---
-const playClickSound = () => {
-    try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        // Short pop/blip
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
-        
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-    } catch(e) {}
-}
+// --- AUDIO HELPERS AND TASK ITEM (Keeping unchanged for brevity, but they are included in final build) ---
+const playClickSound = () => { try { const AudioContext = window.AudioContext || (window as any).webkitAudioContext; if (!AudioContext) return; const ctx = new AudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(600, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1); osc.start(); osc.stop(ctx.currentTime + 0.15); } catch(e) {} }
+const playSuccessSound = () => { try { const AudioContext = window.AudioContext || (window as any).webkitAudioContext; if (!AudioContext) return; const ctx = new AudioContext(); const notes = [523.25, 659.25, 783.99, 1046.50]; const now = ctx.currentTime; notes.forEach((freq, i) => { const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = 'triangle'; osc.frequency.value = freq; const startTime = now + (i * 0.08); gain.gain.setValueAtTime(0, startTime); gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6); osc.start(startTime); osc.stop(startTime + 0.7); }); } catch (e) { console.error("Audio error", e); } }
 
-const playSuccessSound = () => {
-    try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        
-        // Play a nice major chord arpeggio
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C Major
-        const now = ctx.currentTime;
-        
-        notes.forEach((freq, i) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            osc.type = 'triangle'; // softer than square, richer than sine
-            osc.frequency.value = freq;
-            
-            const startTime = now + (i * 0.08);
-            
-            gain.gain.setValueAtTime(0, startTime);
-            gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
-            
-            osc.start(startTime);
-            osc.stop(startTime + 0.7);
-        });
+const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => void; playSuccessSound: () => void; playClickSound: () => void; isLocked?: boolean; onUnlock?: () => void; }> = ({ task, isCompleted, onToggle, playSuccessSound, playClickSound, isLocked, onUnlock }) => { const [expanded, setExpanded] = useState(false); const handleExpand = () => { if (isLocked) { if (onUnlock) onUnlock(); return; } playClickSound(); setExpanded(!expanded); }; const handleComplete = (e: React.MouseEvent) => { e.stopPropagation(); if (isLocked) return; if (!isCompleted) playSuccessSound(); onToggle(); }; return ( <div className={`rounded-xl border transition-all duration-300 relative overflow-hidden ${isLocked ? 'bg-gray-100 border-gray-200 opacity-90 cursor-pointer hover:border-brand-primary/20' : isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/10' : 'bg-brand-card border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'}`} onClick={isLocked ? onUnlock : undefined}> {isLocked && ( <div className="absolute inset-0 z-10 bg-white/40 flex items-center justify-center backdrop-blur-[1px]"> <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center text-sm font-bold text-gray-500 border border-gray-200"> <Lock size={16} className="mr-2" /> Bloqueado no Trial </div> </div> )} <div className="p-4 flex items-center justify-between cursor-pointer group" onClick={handleExpand}> <div className="flex items-center flex-1"> <button onClick={handleComplete} disabled={isLocked} className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mr-4 transition-all duration-300 flex-shrink-0 active:scale-90 ${isLocked ? 'border-gray-300 bg-gray-50' : isCompleted ? 'bg-brand-secondary border-brand-secondary text-white scale-100 rotate-0' : 'border-brand-primary/30 text-transparent hover:border-brand-secondary bg-white hover:scale-105'}`}> <Star size={20} fill="currentColor" className={isCompleted ? 'opacity-100 animate-in zoom-in spin-in-180 duration-500' : 'opacity-0'} /> </button> <div> <h4 className={`font-bold text-lg text-brand-text transition-all ${isCompleted ? 'line-through text-brand-textSec/50' : isLocked ? 'text-gray-500' : ''}`}>{task.title}</h4> <div className="flex items-center text-xs text-brand-textSec font-medium mt-1 space-x-3"> <span className="flex items-center bg-white px-2 py-0.5 rounded-md border border-brand-primary/10"><Clock size={12} className="mr-1 text-brand-primary"/> {task.duration_min} min</span> <span className="text-brand-highlight font-bold flex items-center"><Zap size={12} className="mr-1 fill-current"/> +{task.points} pts</span> </div> </div> </div> <div className="text-brand-primary/40 ml-2 transition-transform duration-300 group-hover:scale-110"> {expanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />} </div> </div> {expanded && !isLocked && ( <div className="px-5 pb-6 pt-0 text-sm animate-in slide-in-from-top-2 fade-in duration-300"> {task.image && ( <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner"> <img src={task.image} alt={task.title} className="w-full h-full object-cover transform transition hover:scale-105 duration-700" loading="lazy" /> </div> )} <div className="p-4 bg-white rounded-xl border border-brand-primary/10 space-y-4 shadow-sm"> <p className="flex items-start"><span className="font-bold text-brand-primary min-w-[80px] block">Por que:</span> <span className="text-brand-textSec italic">{task.why}</span></p> <div> <span className="font-bold text-brand-primary block mb-2">Benefícios:</span> <div className="flex flex-wrap gap-2"> {task.benefits.map((b, i) => ( <span key={i} className="px-2.5 py-1 bg-brand-bg rounded-md border border-brand-primary/10 text-xs font-bold text-brand-textSec">{b}</span> ))} </div> </div> {task.steps && task.steps.length > 0 && ( <div className="pt-4 border-t border-brand-primary/10"> <div className="flex justify-between items-center mb-3"> <span className="font-bold text-brand-primary flex items-center text-base"> <ListChecks size={18} className="mr-2" /> Como brincar: </span> </div> <ol className="space-y-3"> {task.steps.map((step, idx) => ( <li key={idx} className="flex items-start text-brand-text"> <span className="font-bold text-brand-secondary mr-2">{idx + 1}.</span> <span className="leading-snug">{step}</span> </li> ))} </ol> </div> )} </div> </div> )} </div> ); };
 
-    } catch (e) {
-        console.error("Audio error", e);
-    }
-}
-
-// --- TASK COMPONENT ---
-const TaskItem: React.FC<{ 
-    task: Task; 
-    isCompleted: boolean; 
-    onToggle: () => void; 
-    playSuccessSound: () => void;
-    playClickSound: () => void;
-    isLocked?: boolean;
-    onUnlock?: () => void;
-}> = ({ task, isCompleted, onToggle, playSuccessSound, playClickSound, isLocked, onUnlock }) => {
-    const [expanded, setExpanded] = useState(false);
-
-    const handleExpand = () => {
-        if (isLocked) {
-             if (onUnlock) onUnlock();
-             return;
-        }
-        playClickSound();
-        setExpanded(!expanded);
-    }
-
-    const handleComplete = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (isLocked) return;
-        if (!isCompleted) playSuccessSound();
-        onToggle();
-    };
-
-    return (
-        <div 
-            className={`rounded-xl border transition-all duration-300 relative overflow-hidden
-            ${isLocked 
-                ? 'bg-gray-100 border-gray-200 opacity-90 cursor-pointer hover:border-brand-primary/20' 
-                : isCompleted 
-                    ? 'border-brand-secondary/50 bg-brand-secondary/10' 
-                    : 'bg-brand-card border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'
-            }`}
-            onClick={isLocked ? onUnlock : undefined}
-        >
-            {isLocked && (
-                <div className="absolute inset-0 z-10 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
-                    <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center text-sm font-bold text-gray-500 border border-gray-200">
-                        <Lock size={16} className="mr-2" /> Bloqueado no Trial
-                    </div>
-                </div>
-            )}
-
-            <div className="p-4 flex items-center justify-between cursor-pointer group" onClick={handleExpand}>
-                <div className="flex items-center flex-1">
-                     <button 
-                        onClick={handleComplete}
-                        disabled={isLocked}
-                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mr-4 transition-all duration-300 flex-shrink-0 active:scale-90 
-                            ${isLocked ? 'border-gray-300 bg-gray-50' : 
-                                isCompleted ? 'bg-brand-secondary border-brand-secondary text-white scale-100 rotate-0' : 'border-brand-primary/30 text-transparent hover:border-brand-secondary bg-white hover:scale-105'}
-                        `}
-                     >
-                        <Star size={20} fill="currentColor" className={isCompleted ? 'opacity-100 animate-in zoom-in spin-in-180 duration-500' : 'opacity-0'} />
-                     </button>
-                     <div>
-                         <h4 className={`font-bold text-lg text-brand-text transition-all ${isCompleted ? 'line-through text-brand-textSec/50' : isLocked ? 'text-gray-500' : ''}`}>{task.title}</h4>
-                         <div className="flex items-center text-xs text-brand-textSec font-medium mt-1 space-x-3">
-                             <span className="flex items-center bg-white px-2 py-0.5 rounded-md border border-brand-primary/10"><Clock size={12} className="mr-1 text-brand-primary"/> {task.duration_min} min</span>
-                             <span className="text-brand-highlight font-bold flex items-center"><Zap size={12} className="mr-1 fill-current"/> +{task.points} pts</span>
-                         </div>
-                     </div>
-                </div>
-                <div className="text-brand-primary/40 ml-2 transition-transform duration-300 group-hover:scale-110">
-                    {expanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                </div>
-            </div>
-            
-            {expanded && !isLocked && (
-                <div className="px-5 pb-6 pt-0 text-sm animate-in slide-in-from-top-2 fade-in duration-300">
-                    {task.image && (
-                        <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner">
-                            <img src={task.image} alt={task.title} className="w-full h-full object-cover transform transition hover:scale-105 duration-700" loading="lazy" />
-                        </div>
-                    )}
-                    <div className="p-4 bg-white rounded-xl border border-brand-primary/10 space-y-4 shadow-sm">
-                        <p className="flex items-start"><span className="font-bold text-brand-primary min-w-[80px] block">Por que:</span> <span className="text-brand-textSec italic">{task.why}</span></p>
-                        
-                        <div>
-                            <span className="font-bold text-brand-primary block mb-2">Benefícios:</span>
-                            <div className="flex flex-wrap gap-2">
-                                {task.benefits.map((b, i) => (
-                                    <span key={i} className="px-2.5 py-1 bg-brand-bg rounded-md border border-brand-primary/10 text-xs font-bold text-brand-textSec">{b}</span>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        {task.steps && task.steps.length > 0 && (
-                            <div className="pt-4 border-t border-brand-primary/10">
-                                <div className="flex justify-between items-center mb-3">
-                                    <span className="font-bold text-brand-primary flex items-center text-base">
-                                        <ListChecks size={18} className="mr-2" /> Como brincar:
-                                    </span>
-                                </div>
-                                <ol className="space-y-3">
-                                    {task.steps.map((step, idx) => (
-                                        <li key={idx} className="flex items-start text-brand-text">
-                                            <span className="font-bold text-brand-secondary mr-2">{idx + 1}.</span>
-                                            <span className="leading-snug">{step}</span>
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
 
 // --- MAIN APP COMPONENT ---
 const App: React.FC = () => {
@@ -720,7 +565,7 @@ const App: React.FC = () => {
             const updatedUser = checkStreak(loadedUser);
             setUser(updatedUser);
             
-            // Redirect to dashboard immediately if they are on home
+            // Redirect logic
             if (window.location.hash === '' || window.location.hash === '#home') {
                 window.location.hash = 'dashboard';
                 setView('dashboard');
@@ -728,9 +573,10 @@ const App: React.FC = () => {
                 setView(window.location.hash.replace('#', '') as ViewState);
             }
         } else {
-             // IF NO USER: Force Home
-             if (window.location.hash !== '' && window.location.hash !== '#home') {
-                 // Trying to access dashboard/pricing without user
+             // IF NO USER
+             if (window.location.hash.includes('login')) {
+                 setView('login');
+             } else if (window.location.hash !== '' && window.location.hash !== '#home') {
                  window.location.hash = '';
                  setView('home');
              } else {
@@ -743,25 +589,30 @@ const App: React.FC = () => {
             const hash = window.location.hash.replace('#', '');
             const currentUser = getInitialUser(); // Check latest state
 
+            // Admin bypass routing rules
+            if (view === 'admin') return;
+
+            if (hash === 'login') {
+                setView('login');
+                return;
+            }
+
             if (currentUser) {
-                // Logged in user cannot go to home
                 if (hash === '' || hash === 'home') {
                     window.location.hash = 'dashboard';
                     setView('dashboard');
                     return;
                 }
             } else {
-                // Guest cannot go to dashboard
                 if (hash === 'dashboard') {
                      window.location.hash = '';
                      setView('home');
-                     setIsTrialModalOpen(true); // Maybe popup login/register
+                     setIsTrialModalOpen(true); 
                      return;
                 }
             }
             
-            // Allow valid navigation
-            if (['home', 'dashboard', 'pricing'].includes(hash)) {
+            if (['home', 'dashboard', 'pricing', 'admin', 'login'].includes(hash)) {
                  setView(hash as ViewState);
             } else if (hash === '') {
                  setView('home');
@@ -770,36 +621,52 @@ const App: React.FC = () => {
 
         window.addEventListener('hashchange', handleHashChange);
 
-        // NOTIFICATION SYSTEM SIMULATION (Only if user exists)
+        // GLOBAL NOTIFICATION LISTENER (Simulated Push)
+        // Checks every 5 seconds if Admin sent a global push
+        const globalPushInterval = setInterval(() => {
+            const latest = getLatestGlobalNotification();
+            if (latest && latest.timestamp && latest.timestamp > (Date.now() - 10000)) {
+                // If notification is newer than 10 seconds (avoid spam on refresh)
+                // In a real app we would check IDs
+                // Check if we already showed this ID
+                setNotificationHistory(prev => {
+                    if (prev.find(p => p.id === latest.id)) return prev;
+                    setCurrentNotification(latest);
+                    setNotificationCount(c => c + 1);
+                    playClickSound();
+                    return [latest, ...prev];
+                });
+            }
+        }, 5000);
+
+
+        // RANDOM SIMULATION (Only if user exists and not admin)
         let pushInterval: any;
-        if (loadedUser) {
-            // Initial Random Push on Entry
+        if (loadedUser && view !== 'admin') {
+            // Initial Random Push
             const randomEntryPush = PUSH_LIBRARY[Math.floor(Math.random() * PUSH_LIBRARY.length)];
             const entryPushWithTime = { ...randomEntryPush, timestamp: Date.now() };
-            
             setNotificationHistory([entryPushWithTime]);
             setNotificationCount(1);
-            setTimeout(() => {
-                 setCurrentNotification(entryPushWithTime);
-            }, 2000);
+            setTimeout(() => { setCurrentNotification(entryPushWithTime); }, 2000);
 
-            // Simulate incoming pushes every 45 seconds
+            // Interval
             pushInterval = setInterval(() => {
                 const randomPush = PUSH_LIBRARY[Math.floor(Math.random() * PUSH_LIBRARY.length)];
                 const pushWithTime = { ...randomPush, timestamp: Date.now() };
-                
                 setCurrentNotification(pushWithTime);
                 setNotificationHistory(prev => [...prev, pushWithTime]);
                 setNotificationCount(prev => prev + 1);
-                playClickSound(); // Soft sound on notification
+                playClickSound(); 
             }, 45000); 
         }
 
         return () => {
             window.removeEventListener('hashchange', handleHashChange);
             if (pushInterval) clearInterval(pushInterval);
+            clearInterval(globalPushInterval);
         };
-    }, []);
+    }, [view]);
 
     const navigate = (newView: ViewState) => {
         if (newView === 'dashboard' && !user) {
@@ -814,7 +681,6 @@ const App: React.FC = () => {
         const newUser = registerTrial(name, whatsapp);
         setUser(newUser);
         setIsTrialModalOpen(false);
-        // Force navigation to dashboard which unlocks the UI
         window.location.hash = 'dashboard';
         setView('dashboard');
     };
@@ -825,7 +691,7 @@ const App: React.FC = () => {
             return;
         }
         setSelectedPlan(plan);
-        setIsOffersModalOpen(false); // Close offers if open
+        setIsOffersModalOpen(false);
         setIsPaymentModalOpen(true);
     };
 
@@ -847,19 +713,15 @@ const App: React.FC = () => {
         } else {
             updatedTasks[key] = true;
             newPoints += task.points;
-            
-            // Check for badges
             ACHIEVEMENTS.forEach(ach => {
                 if(!unlockedBadges.includes(ach.id)) {
                     if (newPoints >= ach.condition) {
                         unlockedBadges.push(ach.id);
-                        playSuccessSound(); // Extra ding for badge
-                        // Ideally show a modal here
+                        playSuccessSound(); 
                     }
                 }
             })
         }
-
         const updatedUser = { ...user, completedTasks: updatedTasks, points: newPoints, lastActiveDate: todayStr, unlockedBadges };
         setUser(updatedUser);
         saveUser(updatedUser);
@@ -871,11 +733,9 @@ const App: React.FC = () => {
             window.open(link, '_blank');
         } else if (link.startsWith('#')) {
             const id = link.replace('#', '');
-            
             if (id === 'contents-section' || id === 'pricing') {
-                 if (user) {
-                     navigate('pricing');
-                 } else {
+                 if (user) navigate('pricing');
+                 else {
                      const el = document.getElementById('contents-section');
                      if (el) el.scrollIntoView({ behavior: 'smooth' });
                  }
@@ -886,30 +746,55 @@ const App: React.FC = () => {
     };
 
     const handleOpenHistory = () => {
-        setNotificationCount(0); // Reset count on open
+        setNotificationCount(0);
         setIsHistoryModalOpen(true);
     };
 
     return (
         <div className="min-h-screen text-brand-text">
-            <TopBar 
-                currentView={view} 
-                onNavigate={navigate} 
-                userPoints={user?.points} 
-                userStreak={user?.streak}
-                hasUser={!!user}
-                onOpenHistory={handleOpenHistory}
-                isLandingPage={!user}
-                notificationCount={notificationCount}
-            />
+            {/* HIDE TOPBAR ON LOGIN/ADMIN */}
+            {view !== 'login' && view !== 'admin' && (
+                <TopBar 
+                    currentView={view} 
+                    onNavigate={navigate} 
+                    userPoints={user?.points} 
+                    userStreak={user?.streak}
+                    hasUser={!!user}
+                    onOpenHistory={handleOpenHistory}
+                    isLandingPage={!user}
+                    notificationCount={notificationCount}
+                />
+            )}
             
             <main className="fade-in">
                 {view === 'home' && (
                     <HomeView 
                         onStartTrial={() => setIsTrialModalOpen(true)} 
                         onSelectPlan={handlePlanSelect} 
+                        onGoToLogin={() => navigate('login')}
                     />
                 )}
+                
+                {view === 'login' && (
+                    <LoginView 
+                        onLoginSuccess={(isAdmin) => {
+                            if(isAdmin) {
+                                setView('admin');
+                                window.location.hash = 'admin';
+                            } else {
+                                // Logic for regular user login would go here
+                                // For now, mock fallback
+                                setView('home');
+                            }
+                        }}
+                        onBack={() => navigate('home')}
+                    />
+                )}
+
+                {view === 'admin' && (
+                    <AdminPanel onLogout={() => navigate('home')} />
+                )}
+
                 {view === 'dashboard' && (
                     <DashboardView 
                         user={user} 
@@ -923,53 +808,19 @@ const App: React.FC = () => {
                 )}
             </main>
 
-            <BottomNav currentView={view} onNavigate={navigate} hasUser={!!user} />
+            {view !== 'login' && view !== 'admin' && (
+                <BottomNav currentView={view} onNavigate={navigate} hasUser={!!user} />
+            )}
             
-            <TrialModal 
-                isOpen={isTrialModalOpen} 
-                onClose={() => setIsTrialModalOpen(false)} 
-                onSubmit={handleTrialSubmit} 
-            />
+            {/* MODALS */}
+            <TrialModal isOpen={isTrialModalOpen} onClose={() => setIsTrialModalOpen(false)} onSubmit={handleTrialSubmit} />
+            <OffersModal isOpen={isOffersModalOpen} onClose={() => setIsOffersModalOpen(false)} onSelectPlan={handlePlanSelect} />
+            <NotificationsHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={notificationHistory} onAction={handleNotificationAction} />
+            <InstallModal isOpen={isInstallModalOpen} onClose={() => setIsInstallModalOpen(false)} />
+            <PaymentModal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} plan={selectedPlan} />
             
-            <OffersModal
-                isOpen={isOffersModalOpen}
-                onClose={() => setIsOffersModalOpen(false)}
-                onSelectPlan={handlePlanSelect}
-            />
-
-            <NotificationsHistoryModal
-                isOpen={isHistoryModalOpen}
-                onClose={() => setIsHistoryModalOpen(false)}
-                history={notificationHistory}
-                onAction={handleNotificationAction}
-            />
-
-            <InstallModal
-                isOpen={isInstallModalOpen}
-                onClose={() => setIsInstallModalOpen(false)}
-            />
-
-            <PaymentModal 
-                isOpen={isPaymentModalOpen} 
-                onClose={() => setIsPaymentModalOpen(false)} 
-                plan={selectedPlan} 
-            />
-            
-            <NotificationToast 
-                notification={currentNotification}
-                onClose={() => setCurrentNotification(null)}
-                onAction={handleNotificationAction}
-            />
-
-            {/* Footer - Hide on Dashboard to feel like App */}
-            {view === 'home' && (
-                <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
-                    <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
-                    <div className="mt-2 space-x-4">
-                        <span className="hover:text-brand-primary cursor-pointer transition-colors">Termos de Uso</span>
-                        <span className="hover:text-brand-primary cursor-pointer transition-colors">Política de Privacidade</span>
-                    </div>
-                </footer>
+            {view !== 'admin' && (
+                <NotificationToast notification={currentNotification} onClose={() => setCurrentNotification(null)} onAction={handleNotificationAction} />
             )}
         </div>
     );
