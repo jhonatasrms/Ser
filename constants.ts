@@ -9,16 +9,16 @@ export const PUSH_LIBRARY: AppNotification[] = [
     { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', linkText: "Manter Ofensiva" },
     { id: "push_3", title: "🎁 Presente especial", message: "Tem um bônus secreto esperando na área de planos.", type: 'success', link: '#pricing-section', linkText: "Ver Bônus" },
     { id: "push_4", title: "⏰ Hora da Calma", message: "3 minutinhos agora podem salvar sua noite de sono.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
-    { id: "push_5", title: "🧘‍♂️ Respire...", message: "O 'Dragão do Balão' está pronto para ajudar.", type: 'info', link: '#dashboard', linkText: "Ir para tarefa" }
+    { id: "push_offer_37", title: "😱 BAIXOU TUDO!", message: "Oferta secreta: Desbloqueie o app completo por apenas R$ 37,00!", type: 'promo', link: '#pricing-section', linkText: "APROVEITAR AGORA" }
 ];
 
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
-    id: "promo_flash",
-    title: "Oferta Relâmpago ⚡",
-    message: "O plano Rotina Feliz (14 dias) está com preço especial hoje.",
+    id: "promo_flash_37",
+    title: "⚡ OFERTA RELÂMPAGO",
+    message: "Apenas HOJE: Todo o Método Sereninho por R$ 37,00. Não perca!",
     link: "#pricing-section",
-    linkText: "Ver Oferta",
+    linkText: "Quero por R$ 37",
     type: "promo"
   }
 ];
