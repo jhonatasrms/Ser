@@ -2,10 +2,10 @@
 export type ViewState = 'home' | 'dashboard' | 'pricing' | 'login' | 'admin';
 
 export interface User {
-  id?: string; // Added ID for management
+  id: string; 
   name: string;
   whatsapp: string;
-  email?: string; // Added email for login simulation
+  email?: string; 
   plan: 'trial' | 'pro' | 'expired';
   trialEndDate: string; // ISO Date string
   points: number;
@@ -37,8 +37,8 @@ export interface Plan {
   features?: string[];
   ctaText?: string; 
   paymentLink?: string; 
-  image?: string; // New field for product grid
-  category?: string; // New field for product category
+  image?: string; 
+  category?: string; 
 }
 
 export interface AppNotification {
@@ -49,8 +49,8 @@ export interface AppNotification {
   linkText?: string;
   type: 'promo' | 'info' | 'success';
   read?: boolean;
-  timestamp?: number; // New field for history
-  isGlobal?: boolean; // Sent by admin
+  timestamp?: number; 
+  isGlobal?: boolean; 
 }
 
 export interface Achievement {

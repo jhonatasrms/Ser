@@ -1,26 +1,24 @@
 
 import { User, AppNotification } from '../types';
 
-const STORAGE_KEY = 'sereninho_user_v2'; 
-const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs';
-const MOCK_USERS_KEY = 'sereninho_mock_users_db';
+const STORAGE_KEY = 'sereninho_current_user_v3'; 
+const MOCK_DB_KEY = 'sereninho_mock_db_users';
+const GLOBAL_PUSH_KEY = 'sereninho_global_push_msg';
 
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
+
+// --- CURRENT USER (SESSION) ---
 
 export const getInitialUser = (): User | null => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return null;
-  
-  const user: User = JSON.parse(stored);
-  if (!user.name) return null;
-  
-  return user;
+  return JSON.parse(stored);
 };
 
 export const saveUser = (user: User) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  // Also update this user in the mock DB if it exists
-  updateMockUserInDB(user);
+  // Sync com o Mock DB para o admin ver as mudanças de progresso
+  syncUserToMockDB(user);
 };
 
 export const registerTrial = (name: string, whatsapp: string): User => {
@@ -67,76 +65,68 @@ export const checkStreak = (user: User): User => {
     return updatedUser;
 };
 
-// --- ADMIN / MOCK DB SERVICES ---
+// --- MOCK DATABASE (ADMIN SIDE) ---
 
-// Gera alguns usuários falsos para popular o painel admin na primeira vez
-const generateMockUsers = (): User[] => {
-    return [
-        { id: 'u_1', name: 'Maria Silva', whatsapp: '11999999999', plan: 'trial', trialEndDate: new Date().toISOString(), points: 150, streak: 3, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
-        { id: 'u_2', name: 'João Santos', whatsapp: '21988888888', plan: 'pro', trialEndDate: '', points: 1200, streak: 45, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
-        { id: 'u_3', name: 'Ana Costa', whatsapp: '31977777777', plan: 'expired', trialEndDate: '2023-01-01', points: 50, streak: 0, lastActiveDate: '2023-01-01', completedTasks: {}, unlockedBadges: [] },
-    ];
-};
-
-export const getAllUsers = (): User[] => {
-    const stored = localStorage.getItem(MOCK_USERS_KEY);
-    let users: User[] = stored ? JSON.parse(stored) : generateMockUsers();
+// Sincroniza o usuário atual para a lista "global" de usuários
+const syncUserToMockDB = (user: User) => {
+    const dbUsers = getAllMockUsers();
+    const index = dbUsers.findIndex(u => u.id === user.id);
     
-    // Add current local user to the list if not there
-    const localUser = getInitialUser();
-    if (localUser && !users.find(u => u.whatsapp === localUser.whatsapp)) {
-        users.unshift(localUser);
+    if (index >= 0) {
+        dbUsers[index] = user;
+    } else {
+        dbUsers.push(user);
     }
     
+    localStorage.setItem(MOCK_DB_KEY, JSON.stringify(dbUsers));
+};
+
+export const getAllMockUsers = (): User[] => {
+    const stored = localStorage.getItem(MOCK_DB_KEY);
+    let users: User[] = stored ? JSON.parse(stored) : [];
+    
+    // Se estiver vazio, popula com dados fake para teste
+    if (users.length === 0) {
+        users = [
+            { id: 'mock_1', name: 'Maria Silva', whatsapp: '11999999999', plan: 'trial', trialEndDate: '', points: 150, streak: 3, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
+            { id: 'mock_2', name: 'João Santos', whatsapp: '21988888888', plan: 'pro', trialEndDate: '', points: 1200, streak: 45, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
+        ];
+        localStorage.setItem(MOCK_DB_KEY, JSON.stringify(users));
+    }
     return users;
 };
 
-export const updateMockUserInDB = (updatedUser: User) => {
-    const users = getAllUsers();
-    const index = users.findIndex(u => u.whatsapp === updatedUser.whatsapp || u.id === updatedUser.id);
-    
-    if (index >= 0) {
-        users[index] = updatedUser;
-    } else {
-        users.unshift(updatedUser);
-    }
-    
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
-};
-
 export const adminUpdateUserPlan = (userId: string, newPlan: 'trial' | 'pro' | 'expired') => {
-    const users = getAllUsers();
+    const users = getAllMockUsers();
     const updatedUsers = users.map(u => {
         if (u.id === userId) {
             return { ...u, plan: newPlan };
         }
         return u;
     });
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
+    localStorage.setItem(MOCK_DB_KEY, JSON.stringify(updatedUsers));
 
-    // If the updated user is the current logged in user, update local session too
-    const localUser = getInitialUser();
-    if (localUser && localUser.id === userId) {
-        saveUser({ ...localUser, plan: newPlan });
+    // SE o usuário alterado for o usuário logado neste navegador, atualiza a sessão também
+    const currentUser = getInitialUser();
+    if (currentUser && currentUser.id === userId) {
+        const updatedCurrent = { ...currentUser, plan: newPlan };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCurrent));
     }
 };
 
-// --- GLOBAL NOTIFICATIONS ---
+// --- GLOBAL NOTIFICATIONS (PUSH SYSTEM) ---
 
-export const sendGlobalNotification = (notif: AppNotification) => {
-    const stored = localStorage.getItem(GLOBAL_NOTIF_KEY);
-    const current: AppNotification[] = stored ? JSON.parse(stored) : [];
-    const newNotif = { ...notif, timestamp: Date.now(), isGlobal: true };
-    
-    // Keep last 10
-    const updated = [newNotif, ...current].slice(0, 10);
-    localStorage.setItem(GLOBAL_NOTIF_KEY, JSON.stringify(updated));
-    return newNotif;
+export const sendGlobalPush = (notif: AppNotification) => {
+    const pushObject = {
+        ...notif,
+        timestamp: Date.now(), // Timestamp atual garante que é uma nova mensagem
+        isGlobal: true
+    };
+    localStorage.setItem(GLOBAL_PUSH_KEY, JSON.stringify(pushObject));
 };
 
-export const getLatestGlobalNotification = (): AppNotification | null => {
-    const stored = localStorage.getItem(GLOBAL_NOTIF_KEY);
+export const checkLatestGlobalPush = (): AppNotification | null => {
+    const stored = localStorage.getItem(GLOBAL_PUSH_KEY);
     if (!stored) return null;
-    const notifs: AppNotification[] = JSON.parse(stored);
-    return notifs.length > 0 ? notifs[0] : null;
+    return JSON.parse(stored);
 };
