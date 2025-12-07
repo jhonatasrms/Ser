@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Bell, LogOut, Search, Send, CheckCircle, RefreshCw, BarChart } from 'lucide-react';
+import { Users, Bell, LogOut, Search, Send, CheckCircle, RefreshCw, BarChart, UserPlus, X } from 'lucide-react';
 import { User, AppNotification } from '../types';
-import { getAllUsers, adminUpdateUserPlan, sendGlobalNotification } from '../services/storageService';
+import { getAllUsers, adminUpdateUserPlan, sendGlobalNotification, adminCreateUser } from '../services/storageService';
 
 interface AdminPanelProps {
     onLogout: () => void;
@@ -12,6 +12,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState<'users' | 'notifications'>('users');
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Notification Form State
     const [notifTitle, setNotifTitle] = useState('');
@@ -20,6 +21,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [notifLinkText, setNotifLinkText] = useState('Ver Agora');
     const [notifType, setNotifType] = useState<'promo' | 'info' | 'success'>('promo');
     const [notifSent, setNotifSent] = useState(false);
+
+    // Create User Form State
+    const [newUserEmail, setNewUserEmail] = useState('');
+    const [newUserName, setNewUserName] = useState('');
+    const [newUserPass, setNewUserPass] = useState('');
+    const [newUserPlan, setNewUserPlan] = useState<'trial'|'pro'>('pro');
 
     useEffect(() => {
         loadUsers();
@@ -63,6 +70,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
             setNotifLink('');
         }, 3000);
     };
+
+    const handleCreateUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        if(newUserEmail && newUserName && newUserPass) {
+            adminCreateUser(newUserName, newUserEmail, newUserPass, newUserPlan);
+            setShowCreateModal(false);
+            setNewUserName('');
+            setNewUserEmail('');
+            setNewUserPass('');
+            loadUsers();
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
@@ -111,16 +130,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="text-lg font-bold text-gray-800">Cadastros Realizados</h3>
-                            <button onClick={loadUsers} className="text-brand-primary hover:bg-brand-primary/10 p-2 rounded-full">
-                                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={() => setShowCreateModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center hover:bg-green-700">
+                                    <UserPlus size={16} className="mr-2" /> Novo Acesso
+                                </button>
+                                <button onClick={loadUsers} className="text-brand-primary hover:bg-brand-primary/10 p-2 rounded-full">
+                                    <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                                </button>
+                            </div>
                         </div>
                         
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                                     <tr>
-                                        <th className="px-6 py-4 font-bold">Nome / Contato</th>
+                                        <th className="px-6 py-4 font-bold">Nome / Email</th>
                                         <th className="px-6 py-4 font-bold">Plano Atual</th>
                                         <th className="px-6 py-4 font-bold">Status</th>
                                         <th className="px-6 py-4 font-bold">Ações</th>
@@ -131,7 +155,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                         <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-bold text-gray-900">{user.name}</div>
-                                                <div className="text-sm text-gray-500">{user.whatsapp}</div>
+                                                <div className="text-xs text-gray-500">{user.email || user.whatsapp}</div>
+                                                {user.password && <div className="text-[10px] text-gray-400">Senha: {user.password}</div>}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
@@ -278,6 +303,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     </div>
                 )}
             </main>
+
+            {/* CREATE USER MODAL */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold">Criar Acesso Manual</h3>
+                            <button onClick={() => setShowCreateModal(false)}><X /></button>
+                        </div>
+                        <form onSubmit={handleCreateUser} className="space-y-4">
+                            <input type="text" placeholder="Nome Completo" className="w-full border p-2 rounded" value={newUserName} onChange={e=>setNewUserName(e.target.value)} required />
+                            <input type="email" placeholder="Email" className="w-full border p-2 rounded" value={newUserEmail} onChange={e=>setNewUserEmail(e.target.value)} required />
+                            <input type="text" placeholder="Senha" className="w-full border p-2 rounded" value={newUserPass} onChange={e=>setNewUserPass(e.target.value)} required />
+                            <select className="w-full border p-2 rounded" value={newUserPlan} onChange={e=>setNewUserPlan(e.target.value as any)}>
+                                <option value="trial">Trial</option>
+                                <option value="pro">Pro</option>
+                            </select>
+                            <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg font-bold">Criar</button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

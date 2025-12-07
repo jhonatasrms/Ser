@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ViewState } from '../types';
-import { Home, LayoutDashboard, CreditCard, Heart, CheckCircle, Bell, Flame, BookOpen } from 'lucide-react';
+import { Home, LayoutDashboard, CreditCard, Heart, CheckCircle, Bell, Flame, BookOpen, LogIn } from 'lucide-react';
 
 interface LayoutProps {
   currentView: ViewState;
@@ -43,7 +43,7 @@ export const TopBar: React.FC<LayoutProps> = ({
 
           <div className="flex items-center space-x-3">
              {/* Only show Bell and Stats if NOT on Landing Page (User is logged in) */}
-             {!isLandingPage && (
+             {!isLandingPage ? (
                <>
                  {/* Notification Bell (History) */}
                  <button 
@@ -78,6 +78,13 @@ export const TopBar: React.FC<LayoutProps> = ({
                     </div>
                   )}
                </>
+             ) : (
+                <button 
+                    onClick={() => onNavigate('login')}
+                    className="flex items-center px-4 py-2 bg-white text-brand-primary text-sm font-bold rounded-full border border-brand-primary/20 shadow-sm hover:bg-brand-primary hover:text-white transition-all"
+                >
+                    <LogIn size={16} className="mr-2" /> Entrar
+                </button>
              )}
           </div>
         </div>

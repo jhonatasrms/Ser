@@ -1,28 +1,124 @@
 
 import { User, AppNotification } from '../types';
 
-const STORAGE_KEY = 'sereninho_user_v2'; 
+const STORAGE_KEY = 'sereninho_current_user'; // Session
+const DB_USERS_KEY = 'sereninho_db_users'; // "Database"
 const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs';
-const MOCK_USERS_KEY = 'sereninho_mock_users_db';
 
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
 
+// --- AUTH SERVICES ---
+
+// Load current session
 export const getInitialUser = (): User | null => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return null;
-  
-  const user: User = JSON.parse(stored);
-  if (!user.name) return null;
-  
-  return user;
+  return JSON.parse(stored);
 };
 
+// Save current session
 export const saveUser = (user: User) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  // Also update this user in the mock DB if it exists
-  updateMockUserInDB(user);
+  updateUserInDB(user); // Sync with DB
 };
 
+// Logout
+export const logoutUser = () => {
+    localStorage.removeItem(STORAGE_KEY);
+};
+
+// "Database" Access
+export const getAllUsers = (): User[] => {
+    const stored = localStorage.getItem(DB_USERS_KEY);
+    if (!stored) {
+        const mocks = generateMockUsers();
+        localStorage.setItem(DB_USERS_KEY, JSON.stringify(mocks));
+        return mocks;
+    }
+    return JSON.parse(stored);
+};
+
+export const updateUserInDB = (updatedUser: User) => {
+    const users = getAllUsers();
+    const index = users.findIndex(u => u.id === updatedUser.id);
+    
+    if (index >= 0) {
+        users[index] = updatedUser;
+    } else {
+        users.push(updatedUser);
+    }
+    
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
+};
+
+// AUTHENTICATION
+
+export const authenticate = (email: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
+    // 1. Check Admin
+    if (email === 'jhonatasrms@gmail.com' && pass === '1234') {
+        return { success: true, isAdmin: true };
+    }
+
+    // 2. Check Users DB
+    const users = getAllUsers();
+    const found = users.find(u => u.email === email && u.password === pass);
+
+    if (found) {
+        saveUser(found); // Set session
+        return { success: true, isAdmin: false, user: found };
+    }
+
+    return { success: false, message: 'Email ou senha incorretos.' };
+};
+
+export const registerAccount = (name: string, email: string, pass: string, whatsapp: string): { success: boolean, message?: string, user?: User } => {
+    const users = getAllUsers();
+    
+    if (users.find(u => u.email === email)) {
+        return { success: false, message: 'Este email já está cadastrado.' };
+    }
+
+    const newUser: User = {
+        id: `u_${Date.now()}`,
+        name,
+        email,
+        password: pass,
+        whatsapp,
+        plan: 'trial',
+        trialEndDate: new Date(Date.now() + 86400000).toISOString(),
+        points: 0,
+        streak: 0,
+        lastActiveDate: getTodayStr(),
+        completedTasks: {},
+        unlockedBadges: []
+    };
+
+    updateUserInDB(newUser);
+    saveUser(newUser); // Auto login
+    return { success: true, user: newUser };
+};
+
+// Admin Create User
+export const adminCreateUser = (name: string, email: string, pass: string, plan: 'trial'|'pro'): User => {
+    const newUser: User = {
+        id: `u_${Date.now()}_adm`,
+        name,
+        email,
+        password: pass,
+        whatsapp: '',
+        plan: plan,
+        trialEndDate: new Date(Date.now() + 86400000).toISOString(),
+        points: 0,
+        streak: 0,
+        lastActiveDate: getTodayStr(),
+        completedTasks: {},
+        unlockedBadges: []
+    };
+    updateUserInDB(newUser);
+    return newUser;
+};
+
+// Trial Registration (No password flow)
 export const registerTrial = (name: string, whatsapp: string): User => {
   const today = new Date();
   const tomorrow = new Date(today);
@@ -67,41 +163,12 @@ export const checkStreak = (user: User): User => {
     return updatedUser;
 };
 
-// --- ADMIN / MOCK DB SERVICES ---
-
-// Gera alguns usuários falsos para popular o painel admin na primeira vez
+// Generate initial mock data if empty
 const generateMockUsers = (): User[] => {
     return [
-        { id: 'u_1', name: 'Maria Silva', whatsapp: '11999999999', plan: 'trial', trialEndDate: new Date().toISOString(), points: 150, streak: 3, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
-        { id: 'u_2', name: 'João Santos', whatsapp: '21988888888', plan: 'pro', trialEndDate: '', points: 1200, streak: 45, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
-        { id: 'u_3', name: 'Ana Costa', whatsapp: '31977777777', plan: 'expired', trialEndDate: '2023-01-01', points: 50, streak: 0, lastActiveDate: '2023-01-01', completedTasks: {}, unlockedBadges: [] },
+        { id: 'u_1', name: 'Maria Silva', email: 'maria@email.com', password: '123', whatsapp: '11999999999', plan: 'trial', trialEndDate: new Date().toISOString(), points: 150, streak: 3, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
+        { id: 'u_2', name: 'João Santos', email: 'joao@email.com', password: '123', whatsapp: '21988888888', plan: 'pro', trialEndDate: '', points: 1200, streak: 45, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] },
     ];
-};
-
-export const getAllUsers = (): User[] => {
-    const stored = localStorage.getItem(MOCK_USERS_KEY);
-    let users: User[] = stored ? JSON.parse(stored) : generateMockUsers();
-    
-    // Add current local user to the list if not there
-    const localUser = getInitialUser();
-    if (localUser && !users.find(u => u.whatsapp === localUser.whatsapp)) {
-        users.unshift(localUser);
-    }
-    
-    return users;
-};
-
-export const updateMockUserInDB = (updatedUser: User) => {
-    const users = getAllUsers();
-    const index = users.findIndex(u => u.whatsapp === updatedUser.whatsapp || u.id === updatedUser.id);
-    
-    if (index >= 0) {
-        users[index] = updatedUser;
-    } else {
-        users.unshift(updatedUser);
-    }
-    
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
 };
 
 export const adminUpdateUserPlan = (userId: string, newPlan: 'trial' | 'pro' | 'expired') => {
@@ -112,9 +179,9 @@ export const adminUpdateUserPlan = (userId: string, newPlan: 'trial' | 'pro' | '
         }
         return u;
     });
-    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(updatedUsers));
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(updatedUsers));
 
-    // If the updated user is the current logged in user, update local session too
+    // Update session if matched
     const localUser = getInitialUser();
     if (localUser && localUser.id === userId) {
         saveUser({ ...localUser, plan: newPlan });
