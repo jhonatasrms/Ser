@@ -1,19 +1,19 @@
 
 import React from 'react';
 import { ViewState } from '../types';
-import { Home, LayoutDashboard, CreditCard, Menu, X, CheckCircle, Heart } from 'lucide-react';
+import { Home, LayoutDashboard, CreditCard, Heart, CheckCircle, Bell, Flame } from 'lucide-react';
 
 interface LayoutProps {
   currentView: ViewState;
   onNavigate: (view: ViewState) => void;
   userPoints?: number;
+  userStreak?: number;
   isTrial?: boolean;
   hasUser: boolean; 
+  onOpenOffers?: () => void;
 }
 
-export const TopBar: React.FC<LayoutProps> = ({ currentView, onNavigate, userPoints, hasUser }) => {
-  // Menu removed as requested
-
+export const TopBar: React.FC<LayoutProps> = ({ currentView, onNavigate, userPoints, userStreak, hasUser, onOpenOffers }) => {
   return (
     <nav className="sticky top-0 z-40 w-full bg-brand-bg/95 backdrop-blur-md border-b border-brand-primary/10 shadow-sm transition-all duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,13 +26,36 @@ export const TopBar: React.FC<LayoutProps> = ({ currentView, onNavigate, userPoi
             </div>
           </div>
 
-          {/* User Points Badge - Only item on right now */}
-          {userPoints !== undefined && hasUser && (
-            <div className="flex items-center px-4 py-1.5 bg-brand-card text-brand-primary rounded-full font-bold border border-brand-primary/20 shadow-sm animate-in fade-in">
-              <CheckCircle size={16} className="mr-2" />
-              {userPoints} pts
-            </div>
-          )}
+          <div className="flex items-center space-x-3">
+             {/* Notification Bell */}
+             <button 
+                onClick={onOpenOffers}
+                className="relative p-2 rounded-full hover:bg-brand-primary/10 transition-colors group"
+                aria-label="Ver ofertas"
+             >
+                <Bell size={22} className="text-brand-primary group-hover:rotate-12 transition-transform" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-brand-bg rounded-full animate-pulse"></span>
+             </button>
+
+             {/* User Stats */}
+             {hasUser && userPoints !== undefined && (
+                <div className="flex items-center space-x-2 animate-in fade-in">
+                    {/* Streak Fire */}
+                    {(userStreak || 0) > 0 && (
+                        <div className="flex items-center px-2 py-1 bg-orange-100 text-orange-600 rounded-lg border border-orange-200">
+                             <Flame size={14} className="fill-orange-500 mr-1" />
+                             <span className="text-xs font-bold">{userStreak}</span>
+                        </div>
+                    )}
+                    
+                    {/* Points */}
+                    <div className="flex items-center px-3 py-1.5 bg-brand-card text-brand-primary rounded-full font-bold border border-brand-primary/20 shadow-sm">
+                        <CheckCircle size={16} className="mr-1.5" />
+                        <span className="text-sm">{userPoints}</span>
+                    </div>
+                </div>
+              )}
+          </div>
         </div>
       </div>
     </nav>
@@ -40,7 +63,10 @@ export const TopBar: React.FC<LayoutProps> = ({ currentView, onNavigate, userPoi
 };
 
 export const BottomNav: React.FC<{ currentView: ViewState; onNavigate: (v: ViewState) => void; hasUser: boolean }> = ({ currentView, onNavigate, hasUser }) => {
-  return (
+    // Only show bottom nav if user is logged in
+    if (!hasUser) return null;
+
+    return (
     <div className="md:hidden fixed bottom-0 w-full bg-brand-card border-t border-brand-primary/10 z-50 flex justify-around py-3 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
        <button 
          onClick={() => onNavigate('home')}
@@ -50,15 +76,13 @@ export const BottomNav: React.FC<{ currentView: ViewState; onNavigate: (v: ViewS
          <span className="text-[10px] font-medium">Início</span>
        </button>
        
-       {hasUser && (
-         <button 
-           onClick={() => onNavigate('dashboard')}
-           className={`flex flex-col items-center space-y-1 transition-transform duration-150 active:scale-90 ${currentView === 'dashboard' ? 'text-brand-primary' : 'text-brand-textSec/60'}`}
-         >
-           <LayoutDashboard size={22} />
-           <span className="text-[10px] font-medium">Aventuras</span>
-         </button>
-       )}
+       <button 
+         onClick={() => onNavigate('dashboard')}
+         className={`flex flex-col items-center space-y-1 transition-transform duration-150 active:scale-90 ${currentView === 'dashboard' ? 'text-brand-primary' : 'text-brand-textSec/60'}`}
+       >
+         <LayoutDashboard size={22} />
+         <span className="text-[10px] font-medium">Jornada</span>
+       </button>
 
        <button 
          onClick={() => onNavigate('pricing')}

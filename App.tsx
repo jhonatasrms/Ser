@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
-import { TrialModal, PaymentModal } from './components/Modals';
+import { TrialModal, PaymentModal, OffersModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
 import { 
@@ -611,6 +611,7 @@ const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [currentNotification, setCurrentNotification] = useState<AppNotification | null>(null);
 
@@ -631,7 +632,6 @@ const App: React.FC = () => {
         }
         
         const handleHashChange = () => {
-            // Fix: Treat hash as string initially to avoid type errors when comparing to empty string
             const hash = window.location.hash.replace('#', '');
             
             if (hash === 'dashboard' && !getInitialUser()) {
@@ -640,7 +640,6 @@ const App: React.FC = () => {
                  return;
             }
 
-            // Fix: Handle hash routing safe type comparison
             if (hash === '' || hash === 'home') {
                 setView('home');
             } else if (hash === 'dashboard') {
@@ -684,6 +683,7 @@ const App: React.FC = () => {
 
     const handlePlanSelect = (plan: Plan) => {
         setSelectedPlan(plan);
+        setIsOffersModalOpen(false); // Close offers if open
         setIsPaymentModalOpen(true);
     };
 
@@ -741,7 +741,9 @@ const App: React.FC = () => {
                 currentView={view} 
                 onNavigate={navigate} 
                 userPoints={user?.points} 
+                userStreak={user?.streak}
                 hasUser={!!user}
+                onOpenOffers={() => setIsOffersModalOpen(true)}
             />
             
             <main className="fade-in">
@@ -755,14 +757,7 @@ const App: React.FC = () => {
                     <DashboardView 
                         user={user} 
                         onToggleTask={handleToggleTask} 
-                        onUnlock={() => {
-                            // Redirect to pricing section in home view
-                            navigate('home');
-                            setTimeout(() => {
-                                const section = document.getElementById('pricing-section');
-                                if (section) section.scrollIntoView({ behavior: 'smooth' });
-                            }, 100);
-                        }} 
+                        onUnlock={() => setIsOffersModalOpen(true)} 
                     />
                 )}
             </main>
@@ -775,6 +770,12 @@ const App: React.FC = () => {
                 onSubmit={handleTrialSubmit} 
             />
             
+            <OffersModal
+                isOpen={isOffersModalOpen}
+                onClose={() => setIsOffersModalOpen(false)}
+                onSelectPlan={handlePlanSelect}
+            />
+
             <PaymentModal 
                 isOpen={isPaymentModalOpen} 
                 onClose={() => setIsPaymentModalOpen(false)} 
