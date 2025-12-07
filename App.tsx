@@ -710,6 +710,10 @@ const App: React.FC = () => {
     };
 
     const handlePlanSelect = (plan: Plan) => {
+        if (plan.paymentLink) {
+            window.location.href = plan.paymentLink;
+            return;
+        }
         setSelectedPlan(plan);
         setIsOffersModalOpen(false); // Close offers if open
         setIsPaymentModalOpen(true);

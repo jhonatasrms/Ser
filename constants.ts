@@ -167,7 +167,8 @@ export const PLANS: Plan[] = [
         "✔ Acesso via Web App",
         "✔ Entrega imediata"
     ],
-    ctaText: "Quero Testar por 7 Dias"
+    ctaText: "Quero Testar por 7 Dias",
+    paymentLink: "https://pay.kiwify.com.br/7umfDIV"
   },
   { 
     id: "p14", 

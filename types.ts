@@ -34,6 +34,7 @@ export interface Plan {
   description: string;
   features?: string[];
   ctaText?: string; // New field for custom button text
+  paymentLink?: string; // Link externo para pagamento (Kiwify, etc)
 }
 
 export interface AppNotification {
