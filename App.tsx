@@ -9,7 +9,7 @@ import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser } fro
 import { 
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
-    Volume2, StopCircle, Trophy, Flame, Lock
+    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -118,7 +118,7 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                                  <Smile size={24} />
                              </div>
                              <h3 className="font-bold text-lg mb-2">2. Brinque Junto</h3>
-                             <p className="text-sm text-gray-600">Siga o passo a passo ilustrado e a narração por voz.</p>
+                             <p className="text-sm text-gray-600">Siga o passo a passo ilustrado e visual.</p>
                          </div>
                          <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-primary/10 transition hover:-translate-y-1">
                              <div className="w-14 h-14 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-4 mx-auto">
@@ -256,9 +256,6 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
     const currentPointsToday = completedTasksToday.reduce((acc, t) => acc + t.points, 0);
     const progressPercent = Math.round((currentPointsToday / totalPointsToday) * 100);
 
-    // Days Simulation
-    const days = [1, 2, 3, 4, 5, 6, 7];
-
     return (
         <div className="pb-24 max-w-3xl mx-auto px-4 pt-6">
             {/* Header / Stats */}
@@ -268,7 +265,7 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                         <h2 className="text-2xl font-bold text-brand-text">Olá, família de {user.name}</h2>
                         <p className="text-brand-textSec text-sm flex items-center mt-1 font-medium">
                             <span className={`inline-block w-2 h-2 rounded-full mr-2 ${user.plan === 'trial' ? 'bg-brand-highlight' : 'bg-brand-success'}`}></span>
-                            {user.plan === 'trial' ? 'Modo Experiência (Dia 1)' : 'Família Sereninho'}
+                            {user.plan === 'trial' ? 'Modo Experiência' : 'Família Sereninho'}
                         </p>
                     </div>
                     <div className="flex gap-4">
@@ -323,65 +320,51 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                 </div>
             </div>
 
-            {/* Days Feed */}
-            <div className="space-y-12">
-                {days.map((day) => {
-                    const isLocked = user.plan === 'trial' && day > 1;
-                    
-                    if (isLocked) {
-                        return (
-                            <div key={day} className="relative group">
-                                <div className="absolute inset-0 bg-brand-bg/60 backdrop-blur-[3px] z-10 rounded-2xl flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-brand-primary/20">
-                                    <div className="bg-white p-4 rounded-full mb-3 shadow-md">
-                                        <Lock className="text-brand-primary/60" size={32} />
-                                    </div>
-                                    <h3 className="font-bold text-brand-text mb-2 text-lg">Dia {day}: Aventura Bloqueada</h3>
-                                    <p className="text-brand-textSec text-sm max-w-xs mb-6 font-medium">{COPY.lockedTask}</p>
-                                    <button 
-                                        onClick={onUnlock}
-                                        className="bg-brand-primary text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-brand-primary/30 hover:bg-[#8B4513] transition-all transform hover:scale-105 active:scale-95 flex items-center"
-                                    >
-                                        <Zap size={18} className="mr-2 fill-yellow-400 text-yellow-400" />
-                                        Liberar Acesso Completo
-                                    </button>
-                                </div>
-                                {/* Dummy content behind blur */}
-                                <div className="opacity-40 filter blur-sm pointer-events-none select-none">
-                                    <div className="flex items-center mb-4"><div className="w-10 h-10 bg-brand-primary/10 rounded-lg mr-4"></div><div className="h-4 bg-brand-primary/10 rounded w-1/2"></div></div>
-                                    <div className="flex items-center"><div className="w-10 h-10 bg-brand-primary/10 rounded-lg mr-4"></div><div className="h-4 bg-brand-primary/10 rounded w-1/3"></div></div>
-                                </div>
-                            </div>
-                        );
-                    }
+            {/* TASKS LIST (UNLOCKED / DAY 1) */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-bold text-brand-text mb-2 flex items-center">
+                    <ListChecks className="mr-2 text-brand-primary" />
+                    Sua Missão de Hoje
+                </h3>
+                
+                {TASKS_DEFAULT.map(task => (
+                    <TaskItem 
+                        key={task.id} 
+                        task={task} 
+                        isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
+                        onToggle={() => onToggleTask(task.id)}
+                        playSuccessSound={playSuccessSound}
+                        playClickSound={playClickSound}
+                    />
+                ))}
+            </div>
 
-                    // Render Tasks for Day 1 (or unlocked days)
-                    return (
-                        <div key={day}>
-                            <h3 className="text-xl font-bold text-brand-text mb-4 flex items-center">
-                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-secondary text-white text-sm mr-3 font-bold shadow-sm">{day}</span>
-                                {day === 1 ? 'Primeiros Passos' : 'Aprofundando'}
-                            </h3>
-                            <div className="space-y-4">
-                                {TASKS_DEFAULT.map(task => (
-                                    <TaskItem 
-                                        key={task.id} 
-                                        task={task} 
-                                        isCompleted={!!user.completedTasks[`${todayStr}_${task.id}`]}
-                                        onToggle={() => onToggleTask(task.id)}
-                                        playSuccessSound={playSuccessSound}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    );
-                })}
+            {/* UNLOCK CTA (Replaces locked days) */}
+            <div className="mt-12 mb-8 bg-brand-primary text-white rounded-2xl p-8 text-center shadow-xl relative overflow-hidden group border-b-8 border-[#5D4037]">
+                <div className="absolute top-0 left-0 w-full h-full bg-white/10 transform rotate-12 scale-150 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full"></div>
+                <div className="relative z-10">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                        <Lock size={32} className="text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">Gostou das brincadeiras?</h3>
+                    <p className="text-white/90 mb-6 max-w-md mx-auto text-lg">
+                        Desbloqueie agora o acesso vitalício com 30 dias de atividades exclusivas e acabe com as birras para sempre.
+                    </p>
+                    <button 
+                        onClick={onUnlock}
+                        className="w-full sm:w-auto px-8 py-4 bg-white text-brand-primary rounded-xl font-bold shadow-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center mx-auto text-lg"
+                    >
+                        Desbloquear Método Completo
+                        <ArrowRight size={20} className="ml-2" />
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
 // --- AUDIO HELPERS ---
-const playSuccessSound = () => {
+const playClickSound = () => {
     try {
         const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContext) return;
@@ -392,55 +375,68 @@ const playSuccessSound = () => {
         osc.connect(gain);
         gain.connect(ctx.destination);
         
-        // Ding sound
+        // Short pop/blip
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
         
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
         
         osc.start();
-        osc.stop(ctx.currentTime + 0.5);
+        osc.stop(ctx.currentTime + 0.15);
+    } catch(e) {}
+}
+
+const playSuccessSound = () => {
+    try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        // Play a nice major chord arpeggio
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C Major
+        const now = ctx.currentTime;
+        
+        notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'triangle'; // softer than square, richer than sine
+            osc.frequency.value = freq;
+            
+            const startTime = now + (i * 0.08);
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+            
+            osc.start(startTime);
+            osc.stop(startTime + 0.7);
+        });
+
     } catch (e) {
         console.error("Audio error", e);
     }
 }
 
-const speakText = (text: string, onEnd?: () => void) => {
-    if (!('speechSynthesis' in window)) return;
-    
-    // Cancel previous
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'pt-BR';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1; // Slightly higher pitch for kids
-    
-    if(onEnd) {
-        utterance.onend = onEnd;
-    }
-
-    window.speechSynthesis.speak(utterance);
-}
-
 // --- TASK COMPONENT ---
-const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => void; playSuccessSound: () => void }> = ({ task, isCompleted, onToggle, playSuccessSound }) => {
+const TaskItem: React.FC<{ 
+    task: Task; 
+    isCompleted: boolean; 
+    onToggle: () => void; 
+    playSuccessSound: () => void;
+    playClickSound: () => void;
+}> = ({ task, isCompleted, onToggle, playSuccessSound, playClickSound }) => {
     const [expanded, setExpanded] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
 
-    const handleSpeak = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (isPlaying) {
-            window.speechSynthesis.cancel();
-            setIsPlaying(false);
-        } else {
-            setIsPlaying(true);
-            const textToRead = `Tarefa: ${task.title}. ${task.why}. Como brincar: ${task.steps?.join('. ')}`;
-            speakText(textToRead, () => setIsPlaying(false));
-        }
-    };
+    const handleExpand = () => {
+        playClickSound();
+        setExpanded(!expanded);
+    }
 
     const handleComplete = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -450,7 +446,7 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
 
     return (
         <div className={`bg-brand-card rounded-xl border transition-all duration-300 ${isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/10' : 'border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'}`}>
-            <div className="p-4 flex items-center justify-between cursor-pointer group" onClick={() => setExpanded(!expanded)}>
+            <div className="p-4 flex items-center justify-between cursor-pointer group" onClick={handleExpand}>
                 <div className="flex items-center flex-1">
                      <button 
                         onClick={handleComplete}
@@ -476,13 +472,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
                     {task.image && (
                         <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner">
                             <img src={task.image} alt={task.title} className="w-full h-full object-cover transform transition hover:scale-105 duration-700" loading="lazy" />
-                            <button 
-                                onClick={handleSpeak}
-                                className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-brand-primary p-2 rounded-full shadow-lg border border-brand-primary/20 hover:scale-110 active:scale-95 transition-all"
-                                title="Ouvir instrução"
-                            >
-                                {isPlaying ? <StopCircle size={24} className="animate-pulse text-red-500" /> : <Volume2 size={24} />}
-                            </button>
                         </div>
                     )}
                     <div className="p-4 bg-white rounded-xl border border-brand-primary/10 space-y-4 shadow-sm">
@@ -503,12 +492,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
                                     <span className="font-bold text-brand-primary flex items-center text-base">
                                         <ListChecks size={18} className="mr-2" /> Como brincar:
                                     </span>
-                                    <button 
-                                        onClick={handleSpeak}
-                                        className="flex items-center text-xs font-bold text-brand-primary bg-brand-primary/5 px-2 py-1 rounded-md hover:bg-brand-primary/10 active:scale-95 transition-transform"
-                                    >
-                                        {isPlaying ? <span className="flex items-center text-red-500"><StopCircle size={12} className="mr-1"/> Parar</span> : <span className="flex items-center"><PlayCircle size={12} className="mr-1"/> {COPY.audioButton}</span>}
-                                    </button>
                                 </div>
                                 <ol className="space-y-3">
                                     {task.steps.map((step, idx) => (
@@ -678,15 +661,12 @@ const App: React.FC = () => {
                         user={user} 
                         onToggleTask={handleToggleTask} 
                         onUnlock={() => {
-                            // Since pricing is now on home, we might want a modal or redirect
-                            // For simplicity, redirect to home pricing section (simulating logout/landing view or opening payment modal)
-                            // A better UX for logged in users might be to open the payment modal directly for the recommended plan
+                            // Open payment modal directly for the recommended plan (14 days)
                             setSelectedPlan(PLANS[1]);
                             setIsPaymentModalOpen(true);
                         }} 
                     />
                 )}
-                {/* Removed standalone PricingView, merged into HomeView */}
             </main>
 
             <BottomNav currentView={view} onNavigate={navigate} hasUser={!!user} />

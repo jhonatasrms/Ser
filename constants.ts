@@ -129,6 +129,52 @@ export const TASKS_DEFAULT: Task[] = [
       "1 coisa gostosa de comer (paladar).",
       "Dê os parabéns a cada descoberta!"
     ]
+  },
+  { 
+    id: "t5", 
+    title: "O Abraço da Borboleta", 
+    points: 20, 
+    duration_min: 5, 
+    why: "Estimulação bilateral que ajuda a processar emoções difíceis e acalmar o coração.", 
+    benefits: ["Segurança", "Auto-regulação"],
+    image: "https://images.unsplash.com/photo-1472162072942-cd5147eb3902?auto=format&fit=crop&q=80&w=600",
+    steps: [
+      "Peça para a criança cruzar os braços sobre o peito.",
+      "As mãos devem tocar os ombros (como asas de borboleta).",
+      "Dê batidinhas alternadas: esquerda, direita, esquerda, direita.",
+      "Faça isso devagar enquanto respira fundo.",
+      "Diga frases positivas: 'Eu estou seguro', 'Eu sou amado'."
+    ]
+  },
+  { 
+    id: "t6", 
+    title: "A Tartaruga Escondida", 
+    points: 10, 
+    duration_min: 5, 
+    why: "Técnica de relaxamento muscular progressivo: contrair e soltar relaxa o corpo.", 
+    benefits: ["Relaxamento Muscular", "Consciência Corporal"],
+    image: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?auto=format&fit=crop&q=80&w=600",
+    steps: [
+      "Diga que perigo está vindo! Peça para a criança encolher os ombros até as orelhas e fechar os olhos bem forte (esconder no casco).",
+      "Segure bem forte por 5 segundos (tensão).",
+      "Diga: 'O perigo passou!'. Peça para soltar tudo de uma vez e relaxar o pescoço.",
+      "Sinta como o corpo fica 'mole' e gostoso depois de sair do casco."
+    ]
+  },
+  { 
+    id: "t7", 
+    title: "A Peninha Mágica", 
+    points: 15, 
+    duration_min: 5, 
+    why: "Treina o foco e movimentos suaves, ótimo para crianças agitadas.", 
+    benefits: ["Calma", "Coordenação Motora"],
+    image: "https://images.unsplash.com/photo-1595358087796-0df78d47936a?auto=format&fit=crop&q=80&w=600",
+    steps: [
+      "Imagine que existe uma pena flutuando no ar.",
+      "A missão é não deixar ela cair no chão, mas só pode usar sopros bem leves.",
+      "Sopre devagar para cima... e acompanhe com a cabeça.",
+      "Faça movimentos lentos com o corpo como se fosse uma pena caindo."
+    ]
   }
 ];
 
@@ -144,8 +190,7 @@ export const COPY = {
     ctaPrimary: "Baixar App / Testar Grátis",
     ctaSecondary: "Conhecer os Planos",
     lockedTask: "Desbloqueie novas brincadeiras terapêuticas no App para fortalecer a confiança do seu pequeno.",
-    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho.",
-    audioButton: "Ouvir Instrução"
+    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
 };
 
 // --- NOVOS CONTEÚDOS SOLICITADOS ---
