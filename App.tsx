@@ -618,50 +618,76 @@ const App: React.FC = () => {
     // Initial Load
     useEffect(() => {
         const loadedUser = getInitialUser();
+        
         if (loadedUser) {
+            // IF USER EXISTS: Force Dashboard, Update Streak
             const updatedUser = checkStreak(loadedUser);
             setUser(updatedUser);
-            if (window.location.hash === '#dashboard') {
+            
+            // Redirect to dashboard immediately if they are on home
+            if (window.location.hash === '' || window.location.hash === '#home') {
+                window.location.hash = 'dashboard';
                 setView('dashboard');
+            } else {
+                setView(window.location.hash.replace('#', '') as ViewState);
             }
         } else {
-             // If no user, ensure we are home
-             if (window.location.hash !== '') {
+             // IF NO USER: Force Home
+             if (window.location.hash !== '' && window.location.hash !== '#home') {
+                 // Trying to access dashboard/pricing without user
                  window.location.hash = '';
+                 setView('home');
+             } else {
+                 setView('home');
              }
         }
         
+        // Strict Routing Handler
         const handleHashChange = () => {
             const hash = window.location.hash.replace('#', '');
-            
-            if (hash === 'dashboard' && !getInitialUser()) {
-                 setView('home');
-                 setIsTrialModalOpen(true);
-                 return;
-            }
+            const currentUser = getInitialUser(); // Check latest state
 
-            if (hash === '' || hash === 'home') {
-                setView('home');
-            } else if (hash === 'dashboard') {
-                setView('dashboard');
-            } else if (hash === 'pricing') {
-                setView('pricing');
+            if (currentUser) {
+                // Logged in user cannot go to home
+                if (hash === '' || hash === 'home') {
+                    window.location.hash = 'dashboard';
+                    setView('dashboard');
+                    return;
+                }
+            } else {
+                // Guest cannot go to dashboard
+                if (hash === 'dashboard') {
+                     window.location.hash = '';
+                     setView('home');
+                     setIsTrialModalOpen(true); // Maybe popup login/register
+                     return;
+                }
+            }
+            
+            // Allow valid navigation
+            if (['home', 'dashboard', 'pricing'].includes(hash)) {
+                 setView(hash as ViewState);
+            } else if (hash === '') {
+                 setView('home');
             }
         };
 
         window.addEventListener('hashchange', handleHashChange);
 
-        // NOTIFICATION SYSTEM TRIGGER
-        const notificationTimer = setTimeout(() => {
-            const promo = PROMO_NOTIFICATIONS[0];
-            if (promo) {
-                setCurrentNotification(promo);
-            }
-        }, 3000);
+        // NOTIFICATION SYSTEM TRIGGER (Only if user exists)
+        let notificationTimer: any;
+        if (loadedUser) {
+            notificationTimer = setTimeout(() => {
+                const promo = PROMO_NOTIFICATIONS[0];
+                if (promo) {
+                    setCurrentNotification(promo);
+                }
+            }, 3000);
+        }
 
         return () => {
             window.removeEventListener('hashchange', handleHashChange);
-            clearTimeout(notificationTimer);
+            if (notificationTimer) clearTimeout(notificationTimer);
         };
     }, []);
 
@@ -678,7 +704,9 @@ const App: React.FC = () => {
         const newUser = registerTrial(name, whatsapp);
         setUser(newUser);
         setIsTrialModalOpen(false);
-        navigate('dashboard');
+        // Force navigation to dashboard which unlocks the UI
+        window.location.hash = 'dashboard';
+        setView('dashboard');
     };
 
     const handlePlanSelect = (plan: Plan) => {
@@ -726,11 +754,17 @@ const App: React.FC = () => {
     const handleNotificationAction = (link: string) => {
         setCurrentNotification(null);
         if (link.startsWith('#')) {
-            // Scroll to element if on home
-            if (view === 'home') {
-                const id = link.replace('#', '');
-                const el = document.getElementById(id);
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            const id = link.replace('#', '');
+            
+            if (id === 'pricing-section') {
+                // If in dashboard, open modal
+                if (view === 'dashboard' || view === 'pricing') {
+                    setIsOffersModalOpen(true);
+                } else {
+                    // Fallback scrolling
+                    const el = document.getElementById(id);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         }
     };
@@ -744,6 +778,7 @@ const App: React.FC = () => {
                 userStreak={user?.streak}
                 hasUser={!!user}
                 onOpenOffers={() => setIsOffersModalOpen(true)}
+                isLandingPage={!user}
             />
             
             <main className="fade-in">
@@ -788,14 +823,16 @@ const App: React.FC = () => {
                 onAction={handleNotificationAction}
             />
 
-            {/* Footer */}
-            <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
-                <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
-                <div className="mt-2 space-x-4">
-                    <span className="hover:text-brand-primary cursor-pointer transition-colors">Termos de Uso</span>
-                    <span className="hover:text-brand-primary cursor-pointer transition-colors">Política de Privacidade</span>
-                </div>
-            </footer>
+            {/* Footer - Hide on Dashboard to feel like App */}
+            {view === 'home' && (
+                <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
+                    <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
+                    <div className="mt-2 space-x-4">
+                        <span className="hover:text-brand-primary cursor-pointer transition-colors">Termos de Uso</span>
+                        <span className="hover:text-brand-primary cursor-pointer transition-colors">Política de Privacidade</span>
+                    </div>
+                </footer>
+            )}
         </div>
     );
 };
