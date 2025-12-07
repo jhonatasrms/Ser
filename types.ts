@@ -32,6 +32,7 @@ export interface Plan {
   days: number;
   highlight: boolean;
   description: string;
+  features?: string[];
 }
 
 export interface AppNotification {
@@ -41,6 +42,13 @@ export interface AppNotification {
   link?: string; // Se tiver link, mostra botão
   linkText?: string;
   type: 'promo' | 'info' | 'success';
+}
+
+export interface Achievement {
+    id: string;
+    name: string;
+    condition: number;
+    icon: string;
 }
 
 export interface AppState {

@@ -17,7 +17,10 @@ const BaseModal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) =
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95 duration-200 overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-brand-bg">
           <h3 className="text-xl font-bold text-brand-text">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-600 transition-colors transform active:scale-90 rounded-full p-1 hover:bg-black/5"
+          >
             <X size={24} />
           </button>
         </div>
@@ -83,7 +86,7 @@ export const TrialModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubm
         <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-3.5 bg-brand-primary text-white rounded-lg font-bold shadow-lg shadow-brand-primary/30 hover:bg-blue-500 transition-all transform active:scale-95 disabled:opacity-70 flex justify-center items-center"
+            className="w-full py-3.5 bg-brand-primary text-white rounded-lg font-bold shadow-lg shadow-brand-primary/30 hover:bg-blue-500 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:scale-100 flex justify-center items-center"
         >
             {loading ? <Loader2 className="animate-spin" /> : 'Liberar Acesso Agora'}
         </button>
@@ -129,7 +132,7 @@ export const PaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; plan
 
             <button 
                 onClick={handlePay}
-                className="w-full py-4 bg-green-500 text-white rounded-lg font-bold text-lg shadow-lg hover:bg-green-600 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-4 bg-green-500 text-white rounded-lg font-bold text-lg shadow-lg hover:bg-green-600 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2"
             >
                 <Lock size={18} />
                 <span>Pagar Agora</span>
@@ -146,14 +149,14 @@ export const PaymentModal: React.FC<{ isOpen: boolean; onClose: () => void; plan
 
        {step === 'success' && (
            <div className="flex flex-col items-center justify-center py-6 text-center">
-               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-4">
+               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-4 animate-in zoom-in duration-300">
                    <Check size={32} strokeWidth={3} />
                </div>
                <h4 className="text-xl font-bold text-gray-900 mb-2">Pagamento Aprovado!</h4>
                <p className="text-gray-600 mb-6">Obrigado por assinar o Método Sereninho.</p>
                <button 
                 onClick={onClose}
-                className="w-full py-3 bg-brand-primary text-white rounded-lg font-bold"
+                className="w-full py-3 bg-brand-primary text-white rounded-lg font-bold transition-all transform hover:scale-[1.02] active:scale-95"
                >
                    Acessar Painel
                </button>

@@ -1,5 +1,5 @@
 
-import { Plan, Task, AppNotification } from './types';
+import { Plan, Task, AppNotification, Achievement } from './types';
 
 export const APP_NAME = "Método Sereninho";
 export const APP_SUBTITLE = "O App que transforma a rotina do seu filho em momentos de calma.";
@@ -24,7 +24,12 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 7, 
     highlight: false,
-    description: "Para crises pontuais e teste rápido."
+    description: "Para crises pontuais e teste rápido.",
+    features: [
+        "Acesso imediato a 7 dias de atividades",
+        "Áudios guiados para as crianças",
+        "Acesso via Web App (sem download)"
+    ]
   },
   { 
     id: "p14", 
@@ -33,7 +38,13 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 14, 
     highlight: true,
-    description: "O favorito para criar hábito real."
+    description: "O favorito para criar hábito real.",
+    features: [
+        "14 dias de roteiro completo",
+        "Acesso vitalício ao conteúdo",
+        "Bônus: Guia do Sono Tranquilo",
+        "Suporte por WhatsApp"
+    ]
   },
   { 
     id: "p30", 
@@ -42,7 +53,13 @@ export const PLANS: Plan[] = [
     currency: "BRL", 
     days: 30, 
     highlight: false,
-    description: "Transformação emocional completa."
+    description: "Transformação emocional completa.",
+    features: [
+        "30 dias de atividades transformadoras",
+        "Acesso vitalício + Atualizações",
+        "Todos os bônus incluídos",
+        "Comunidade exclusiva de mães"
+    ]
   }
 ];
 
@@ -115,13 +132,20 @@ export const TASKS_DEFAULT: Task[] = [
   }
 ];
 
+export const ACHIEVEMENTS: Achievement[] = [
+    { id: "first_steps", name: "Primeiros Passos", condition: 20, icon: "star" },
+    { id: "calm_master", name: "Mestre da Calma", condition: 100, icon: "zap" },
+    { id: "zen_kid", name: "Criança Zen", condition: 300, icon: "trophy" }
+];
+
 export const COPY = {
     heroTitle: "Troque o tempo de tela por calma e conexão.",
     heroSubtitle: "O App que guia seu filho em 7 dias de micro-hábitos e brincadeiras para vencer a ansiedade e as birras.",
     ctaPrimary: "Baixar App / Testar Grátis",
     ctaSecondary: "Conhecer os Planos",
     lockedTask: "Desbloqueie novas brincadeiras terapêuticas no App para fortalecer a confiança do seu pequeno.",
-    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho."
+    trialBanner: "Dia 1 Liberado: Use o App agora para acalmar seu filho.",
+    audioButton: "Ouvir Instrução"
 };
 
 // --- NOVOS CONTEÚDOS SOLICITADOS ---
