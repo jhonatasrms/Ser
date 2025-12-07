@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { X, Lock, Check, Loader2, Smartphone, User as UserIcon, Star, CheckCircle2 } from 'lucide-react';
+import { X, Lock, Check, Loader2, Smartphone, User as UserIcon, Star, CheckCircle2, Download, Share, MoreVertical, PlusSquare } from 'lucide-react';
 import { Plan } from '../types';
 import { PLANS } from '../constants';
 
@@ -31,6 +30,53 @@ const BaseModal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) =
       </div>
     </div>
   );
+};
+
+export const InstallModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    return (
+        <BaseModal isOpen={isOpen} onClose={onClose} title="Instalar Aplicativo">
+            <div className="p-6">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-brand-bg rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-md">
+                        <Smartphone size={32} className="text-brand-primary" />
+                    </div>
+                    <p className="text-brand-text font-medium">Tenha o Método Sereninho direto na tela do seu celular para acesso rápido!</p>
+                </div>
+
+                <div className="space-y-6">
+                    {/* iOS Instructions */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <h4 className="font-bold text-gray-900 mb-2 flex items-center">
+                            📱 iPhone (iOS)
+                        </h4>
+                        <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                            <li>Toque no botão <span className="font-bold inline-flex items-center"><Share size={12} className="mx-1"/> Compartilhar</span> abaixo.</li>
+                            <li>Role para baixo e toque em <span className="font-bold inline-flex items-center"><PlusSquare size={12} className="mx-1"/> Adicionar à Tela de Início</span>.</li>
+                            <li>Clique em <b>Adicionar</b> no canto superior direito.</li>
+                        </ol>
+                    </div>
+
+                    {/* Android Instructions */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <h4 className="font-bold text-gray-900 mb-2 flex items-center">
+                            🤖 Android
+                        </h4>
+                        <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                            <li>Toque nos <span className="font-bold inline-flex items-center"><MoreVertical size={12} className="mx-1"/> Três Pontinhos</span> do navegador.</li>
+                            <li>Selecione <span className="font-bold">Instalar aplicativo</span> ou <span className="font-bold">Adicionar à tela inicial</span>.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={onClose}
+                    className="w-full mt-6 py-3 bg-brand-primary text-white rounded-lg font-bold"
+                >
+                    Entendi
+                </button>
+            </div>
+        </BaseModal>
+    );
 };
 
 export const TrialModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (name: string, whatsapp: string) => void }> = ({ isOpen, onClose, onSubmit }) => {

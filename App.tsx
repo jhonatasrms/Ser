@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
-import { TrialModal, PaymentModal, OffersModal } from './components/Modals';
+import { TrialModal, PaymentModal, OffersModal, InstallModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
 import { 
@@ -14,7 +13,7 @@ import {
     Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
     Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
     Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote,
-    ArrowLeft, Calendar, Unlock
+    ArrowLeft, Calendar, Unlock, Download
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -296,7 +295,12 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
 };
 
 // --- DASHBOARD VIEW (APP INTERFACE WITH JOURNEY) ---
-const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string) => void; onUnlock: () => void }> = ({ user, onToggleTask, onUnlock }) => {
+const DashboardView: React.FC<{ 
+    user: User | null; 
+    onToggleTask: (taskId: string) => void; 
+    onUnlock: () => void;
+    onOpenInstall: () => void;
+}> = ({ user, onToggleTask, onUnlock, onOpenInstall }) => {
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
     if (!user) return <div className="p-8 text-center text-brand-text">Preparando as brincadeiras...</div>;
@@ -374,7 +378,7 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
     return (
         <div className="pb-24 max-w-3xl mx-auto px-4 pt-6 font-sans">
              {/* Header / Stats */}
-             <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-8 relative overflow-hidden">
+             <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-6 relative overflow-hidden">
                 <div className="flex justify-between items-center mb-6 relative z-10">
                     <div>
                         <h2 className="text-xl font-bold text-brand-text">Jornada de {user.name}</h2>
@@ -408,6 +412,15 @@ const DashboardView: React.FC<{ user: User | null; onToggleTask: (taskId: string
                     })}
                 </div>
             </div>
+
+            {/* INSTALL APP BANNER */}
+            <button 
+                onClick={onOpenInstall}
+                className="w-full bg-white border-2 border-brand-primary/20 rounded-xl p-3 mb-8 flex items-center justify-center text-brand-primary font-bold shadow-sm hover:bg-brand-bg/30 transition-all active:scale-95 group"
+            >
+                <Download size={20} className="mr-2 group-hover:scale-110 transition-transform" />
+                Instalar App na Tela Inicial
+            </button>
 
             <h3 className="text-lg font-bold text-brand-text mb-4 pl-1">Sua Trilha de Calma</h3>
 
@@ -647,6 +660,7 @@ const App: React.FC = () => {
     const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
+    const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [currentNotification, setCurrentNotification] = useState<AppNotification | null>(null);
 
@@ -832,6 +846,7 @@ const App: React.FC = () => {
                         user={user} 
                         onToggleTask={handleToggleTask} 
                         onUnlock={() => setIsOffersModalOpen(true)} 
+                        onOpenInstall={() => setIsInstallModalOpen(true)}
                     />
                 )}
             </main>
@@ -848,6 +863,11 @@ const App: React.FC = () => {
                 isOpen={isOffersModalOpen}
                 onClose={() => setIsOffersModalOpen(false)}
                 onSelectPlan={handlePlanSelect}
+            />
+
+            <InstallModal
+                isOpen={isInstallModalOpen}
+                onClose={() => setIsInstallModalOpen(false)}
             />
 
             <PaymentModal 
