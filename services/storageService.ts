@@ -1,5 +1,4 @@
 
-
 import { User, Entitlement, AuditLog, AppNotification, Product, AccessLevel, NotificationChannel, AccessStatus } from '../types';
 import { PRODUCTS } from '../constants';
 
@@ -28,49 +27,12 @@ const logAudit = (actorId: string, action: AuditLog['action'], targetId: string,
         actor_id: actorId,
         action,
         target_id: targetId,
+        target_type: 'user', // Default to user, simplified for mock
         details,
         timestamp: new Date().toISOString()
     });
     saveTable(TBL_AUDIT_LOGS, logs);
 };
-
-// --- INITIALIZATION (SEED) ---
-
-export const initializeDB = () => {
-    const users = getTable<User>(TBL_USERS);
-    
-    // Seed SuperAdmin if not exists
-    if (!users.find(u => u.id === 'admin_master')) {
-        const superAdmin: User = {
-            id: 'admin_master',
-            name: 'Super Admin',
-            email: 'jhonatasrms@gmail.com',
-            whatsapp: '5500000000000',
-            password_hash: '1234', // In real app: bcrypt hash
-            role: 'superadmin',
-            is_verified: true,
-            created_at: new Date().toISOString(),
-            last_login_at: new Date().toISOString(),
-            points: 0,
-            streak: 0,
-            lastActiveDate: new Date().toISOString(),
-            completedTasks: {},
-            unlockedBadges: [],
-            consent_whatsapp: true
-        };
-        users.push(superAdmin);
-        saveTable(TBL_USERS, users);
-        
-        // Grant all access to admin
-        PRODUCTS.forEach(p => {
-            grantEntitlement('admin_master', 'system', p.id, 'full', 9999);
-        });
-        
-        console.log('Database seeded with SuperAdmin.');
-    }
-};
-
-initializeDB();
 
 // --- AUTH SERVICE ---
 
@@ -95,52 +57,9 @@ export const authenticate = (login: string, pass: string): { success: boolean, u
     return { success: false, message: 'Credenciais inválidas.' };
 };
 
-export const registerAccount = (name: string, email: string, whatsapp: string, pass: string, role: User['role'] = 'user'): { success: boolean, user?: User, message?: string } => {
-    const users = getTable<User>(TBL_USERS);
-    
-    if (users.find(u => u.email === email)) return { success: false, message: 'Email já cadastrado.' };
-    
-    const newUser: User = {
-        id: `u_${Date.now()}`,
-        name,
-        email,
-        whatsapp,
-        password_hash: pass,
-        role,
-        is_verified: false, // In real app, send email logic here
-        created_at: new Date().toISOString(),
-        last_login_at: new Date().toISOString(),
-        points: 0,
-        streak: 0,
-        lastActiveDate: new Date().toISOString().split('T')[0],
-        completedTasks: {},
-        unlockedBadges: [],
-        consent_whatsapp: true
-    };
-    
-    users.push(newUser);
-    saveTable(TBL_USERS, users);
-    
-    // Default Entitlement: Trial for Main Method
-    // 2 Days Trial
-    const trialExpire = new Date();
-    trialExpire.setDate(trialExpire.getDate() + 2);
-    
-    grantEntitlement(newUser.id, 'system', 'main_method', 'partial', 3, trialExpire.toISOString());
-    
-    // Set Session
-    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
-    logAudit(newUser.id, 'register', newUser.id, 'User registered');
-    
-    return { success: true, user: newUser };
-};
-
-// Aliased for compatibility with AdminPanel which uses `register`
-export const register = registerAccount;
-
 export const logoutUser = () => {
     const user = getCurrentUser();
-    if(user) logAudit(user.id, 'login', user.id, 'User logged out'); // Action login used for session events
+    if(user) logAudit(user.id, 'login', user.id, 'User logged out');
     localStorage.removeItem(SESSION_KEY);
 };
 
@@ -216,6 +135,30 @@ export const checkAccess = (userId: string, productId: string): { hasAccess: boo
     return { hasAccess: true, level: ent.access_level, tasks: ent.tasks_unlocked };
 };
 
+// --- AUDIT & NOTIFICATIONS ---
+
+export const getAuditLogs = (): AuditLog[] => getTable<AuditLog>(TBL_AUDIT_LOGS);
+
+export const createNotification = (userId: string, title: string, message: string, channel: NotificationChannel, type: AppNotification['type']) => {
+    const notifs = getTable<AppNotification>(TBL_NOTIFICATIONS);
+    notifs.unshift({
+        id: `n_${Date.now()}`,
+        user_id: userId,
+        title,
+        message,
+        channel,
+        type,
+        status: 'pending',
+        timestamp: Date.now()
+    });
+    saveTable(TBL_NOTIFICATIONS, notifs);
+};
+
+export const getUserNotifications = (userId: string): AppNotification[] => {
+    const notifs = getTable<AppNotification>(TBL_NOTIFICATIONS);
+    return notifs.filter(n => n.user_id === userId);
+};
+
 // --- USER MANAGEMENT SERVICE ---
 
 export const getAllUsers = (): User[] => getTable<User>(TBL_USERS);
@@ -245,30 +188,88 @@ export const deleteUser = (userId: string, adminId: string) => {
     logAudit(adminId, 'delete_user', userId, 'User deleted');
 };
 
-// --- AUDIT & NOTIFICATIONS ---
-
-export const getAuditLogs = (): AuditLog[] => getTable<AuditLog>(TBL_AUDIT_LOGS);
-
-export const createNotification = (userId: string, title: string, message: string, channel: NotificationChannel, type: AppNotification['type']) => {
-    const notifs = getTable<AppNotification>(TBL_NOTIFICATIONS);
-    notifs.unshift({
-        id: `n_${Date.now()}`,
-        user_id: userId,
-        title,
-        message,
-        channel,
-        type,
-        status: 'pending',
-        timestamp: Date.now()
-    });
-    saveTable(TBL_NOTIFICATIONS, notifs);
+export const registerAccount = (name: string, email: string, whatsapp: string, pass: string, role: User['role'] = 'user'): { success: boolean, user?: User, message?: string } => {
+    const users = getTable<User>(TBL_USERS);
+    
+    if (users.find(u => u.email === email)) return { success: false, message: 'Email já cadastrado.' };
+    
+    const newUser: User = {
+        id: `u_${Date.now()}`,
+        name,
+        email,
+        whatsapp,
+        password_hash: pass,
+        role,
+        is_verified: false, // In real app, send email logic here
+        created_at: new Date().toISOString(),
+        last_login_at: new Date().toISOString(),
+        points: 0,
+        streak: 0,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        completedTasks: {},
+        unlockedBadges: [],
+        consent_whatsapp: true
+    };
+    
+    users.push(newUser);
+    saveTable(TBL_USERS, users);
+    
+    // Default Entitlement: Trial for Main Method
+    // 2 Days Trial
+    const trialExpire = new Date();
+    trialExpire.setDate(trialExpire.getDate() + 2);
+    
+    grantEntitlement(newUser.id, 'system', 'main_method', 'partial', 3, trialExpire.toISOString());
+    
+    // Set Session
+    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
+    logAudit(newUser.id, 'register', newUser.id, 'User registered');
+    
+    return { success: true, user: newUser };
 };
 
-export const getUserNotifications = (userId: string): AppNotification[] => {
-    const notifs = getTable<AppNotification>(TBL_NOTIFICATIONS);
-    return notifs.filter(n => n.user_id === userId);
+// Aliased for compatibility
+export const register = registerAccount;
+
+// --- INITIALIZATION (SEED) ---
+// Moved to bottom to ensure grantEntitlement is defined
+export const initializeDB = () => {
+    const users = getTable<User>(TBL_USERS);
+    
+    // Seed SuperAdmin if not exists
+    if (!users.find(u => u.id === 'admin_master')) {
+        const superAdmin: User = {
+            id: 'admin_master',
+            name: 'Super Admin',
+            email: 'jhonatasrms@gmail.com',
+            whatsapp: '5500000000000',
+            password_hash: '1234', // In real app: bcrypt hash
+            role: 'superadmin',
+            is_verified: true,
+            created_at: new Date().toISOString(),
+            last_login_at: new Date().toISOString(),
+            points: 0,
+            streak: 0,
+            lastActiveDate: new Date().toISOString(),
+            completedTasks: {},
+            unlockedBadges: [],
+            consent_whatsapp: true
+        };
+        users.push(superAdmin);
+        saveTable(TBL_USERS, users);
+        
+        // Grant all access to admin
+        PRODUCTS.forEach(p => {
+            grantEntitlement('admin_master', 'system', p.id, 'full', 9999);
+        });
+        
+        console.log('Database seeded with SuperAdmin.');
+    }
 };
 
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
 export const checkStreak = (u: User) => u; // Placeholder for logic retention
 export const saveUser = (u: User) => updateUser(u.id, u, u.id); // Self update wrapper
+
+// Execute init
+initializeDB();

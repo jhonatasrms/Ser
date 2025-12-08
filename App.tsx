@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
 import { PaymentModal, OffersModal, InstallModal, NotificationsHistoryModal } from './components/Modals';
