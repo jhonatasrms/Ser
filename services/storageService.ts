@@ -8,7 +8,6 @@ const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs'; // Notificações globais
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
 
 // --- AUXILIAR: MOCKS INICIAIS ---
-// Garante que sempre exista o Admin e alguns dados para teste
 const ensureDatabaseInitialized = () => {
     const stored = localStorage.getItem(DB_USERS_KEY);
     if (!stored) {
@@ -68,12 +67,10 @@ export const getAllUsers = (): User[] => {
     return stored ? JSON.parse(stored) : [];
 };
 
-// Salva a lista completa no localStorage
 const saveAllUsers = (users: User[]) => {
     localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
 };
 
-// Atualiza ou insere um usuário no banco global
 export const updateUserInDB = (userToSave: User) => {
     const users = getAllUsers();
     const index = users.findIndex(u => u.id === userToSave.id);
@@ -85,7 +82,6 @@ export const updateUserInDB = (userToSave: User) => {
     }
     saveAllUsers(users);
     
-    // Se o usuário atualizado for o mesmo da sessão, atualiza a sessão também
     const currentUser = getInitialUser();
     if (currentUser && currentUser.id === userToSave.id) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(userToSave));
@@ -99,7 +95,7 @@ export const getInitialUser = (): User | null => {
     if (!stored) return null;
     const user = JSON.parse(stored);
     
-    // Sempre revalida com o banco para pegar status atualizado (ex: se o admin mudou o plano)
+    // Sempre revalida com o banco para pegar status atualizado
     const dbUsers = getAllUsers();
     const freshUser = dbUsers.find(u => u.id === user.id);
     
@@ -110,9 +106,7 @@ export const getInitialUser = (): User | null => {
 };
 
 export const saveUser = (user: User) => {
-    // 1. Salva na Sessão
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    // 2. Salva no Banco Global (Persistência)
     updateUserInDB(user);
 };
 
@@ -122,7 +116,7 @@ export const logoutUser = () => {
 
 // Lógica de Expiração Automática
 const refreshUserStatus = (user: User): User => {
-    if (user.role === 'admin') return user; // Admin nunca expira
+    if (user.role === 'admin') return user; 
 
     const now = new Date();
     const trialEnd = new Date(user.trial_end);
@@ -142,7 +136,6 @@ const refreshUserStatus = (user: User): User => {
         currentPlan = 'trial';
     }
 
-    // Se mudou algo, retorna o objeto atualizado (sem salvar no DB ainda para evitar loops de render)
     if (user.access_active !== isActive || user.plan !== currentPlan) {
         return { ...user, access_active: isActive, plan: currentPlan };
     }
@@ -153,10 +146,7 @@ const refreshUserStatus = (user: User): User => {
 // --- AÇÕES DE LOGIN E REGISTRO ---
 
 export const authenticate = (login: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
-    // 1. Busca no banco mockado
     const users = getAllUsers();
-    
-    // Login aceita Email ou WhatsApp (somente números)
     const cleanLogin = login.toLowerCase().trim();
     
     const found = users.find(u => 
@@ -165,20 +155,19 @@ export const authenticate = (login: string, pass: string): { success: boolean, i
     );
 
     if (found) {
-        // Verifica Admin hardcoded por segurança extra ou pela role
         if (found.role === 'admin' || (login === 'jhonatasrms' && pass === '1234')) {
             saveUser(found);
             return { success: true, isAdmin: true, user: found };
         }
         
-        saveUser(found); // Inicia sessão
+        saveUser(found); 
         return { success: true, isAdmin: false, user: found };
     }
 
-    // Fallback Admin de Emergência (caso o banco tenha sido limpo)
+    // Fallback Admin de Emergência
     if ((login === 'jhonatasrms' || login === 'jhonatasrms@gmail.com') && pass === '1234') {
         const fallbackAdmin: User = { 
-            id: 'admin_fallback', name: 'Admin', email: 'jhonatasrms@gmail.com', whatsapp: '', role: 'admin', 
+            id: 'admin_fallback', name: 'Admin Master', email: 'jhonatasrms@gmail.com', whatsapp: '', role: 'admin', 
             plan: 'pro', trial_start: '', trial_end: '', access_active: true, points: 0, streak: 0, lastActiveDate: '', completedTasks: {}, unlockedBadges: [] 
         };
         saveUser(fallbackAdmin);
@@ -205,8 +194,8 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         email,
         password: pass,
         whatsapp,
-        role: 'user',
-        plan: 'trial',
+        role: 'user', // Cadastro público é sempre User
+        plan: 'trial', // Cadastro público é sempre Trial
         trial_start: now.toISOString(),
         trial_end: trialEnd.toISOString(),
         access_active: true,
@@ -218,12 +207,11 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         consent_whatsapp: true
     };
 
-    updateUserInDB(newUser); // Salva no banco global
-    saveUser(newUser); // Loga o usuário imediatamente
+    updateUserInDB(newUser); 
+    saveUser(newUser); 
     return { success: true, user: newUser };
 };
 
-// Registro Rápido (Trial Modal)
 export const registerTrial = (name: string, whatsapp: string): User => {
   const now = new Date();
   const trialEnd = new Date(now);
@@ -233,8 +221,8 @@ export const registerTrial = (name: string, whatsapp: string): User => {
     id: `u_${Date.now()}_trial`,
     name,
     whatsapp,
-    email: `${whatsapp}@trial.com`, // Email placeholder
-    password: 'trial_user', // Senha placeholder
+    email: `${whatsapp}@trial.com`, 
+    password: 'trial_user', 
     role: 'user',
     plan: 'trial',
     trial_start: now.toISOString(),
@@ -248,26 +236,24 @@ export const registerTrial = (name: string, whatsapp: string): User => {
     consent_whatsapp: true
   };
   
-  updateUserInDB(newUser); // Importante: Salvar no banco para o admin ver
+  updateUserInDB(newUser);
   saveUser(newUser);
   return newUser;
 };
 
 // --- AÇÕES ADMINISTRATIVAS (CRUD) ---
 
-export const adminCreateUser = (name: string, email: string, pass: string, planType: 'trial'|'pro'): User => {
+// Agora suporta criação de Admins e definição de PlanID
+export const adminCreateUser = (name: string, email: string, pass: string, planType: 'trial'|'pro', role: 'user'|'admin' = 'user', planId?: string): User => {
     const now = new Date();
     let trialEnd = new Date(now);
     let active = true;
-    let planId = undefined;
     let expiresAt = undefined;
 
     if (planType === 'trial') {
         trialEnd.setDate(trialEnd.getDate() + 2);
     } else {
-        // Pro Access
         trialEnd.setDate(trialEnd.getDate() - 1); 
-        planId = 'p_manual_admin';
         expiresAt = new Date(now);
         expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 Ano
     }
@@ -278,9 +264,9 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
         email,
         password: pass,
         whatsapp: '',
-        role: 'user',
+        role: role, // Define se é User ou Admin
         plan: planType,
-        plan_id: planId,
+        plan_id: planId || (planType === 'pro' ? 'p_manual_admin' : undefined),
         trial_start: now.toISOString(),
         trial_end: trialEnd.toISOString(),
         access_active: active,
@@ -295,17 +281,12 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
     return newUser;
 };
 
-// NOVA FUNÇÃO: Editar Usuário
 export const adminUpdateUser = (userId: string, data: Partial<User>) => {
     const users = getAllUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx >= 0) {
-        // Mescla os dados antigos com os novos
         const updatedUser = { ...users[idx], ...data };
-        
-        // Recalcula status baseado nas novas datas se necessário
         const refreshedUser = refreshUserStatus(updatedUser);
-        
         users[idx] = refreshedUser;
         saveAllUsers(users);
         return refreshedUser;
@@ -345,8 +326,6 @@ export const adminRevokeAccess = (userId: string) => {
         access_expires_at: undefined
     });
 };
-
-// --- STREAK & NOTIFICAÇÕES GLOBAIS ---
 
 export const checkStreak = (user: User): User => {
     const today = getTodayStr();
