@@ -5,7 +5,7 @@ import { authenticate, registerAccount } from '../services/storageService';
 import { User as UserType } from '../types';
 
 interface AuthViewProps {
-    onLoginSuccess: (user: UserType) => void; // Passamos o usuário inteiro para decidir o redirecionamento
+    onLoginSuccess: (user: UserType) => void; 
     onBack: () => void;
 }
 
@@ -28,14 +28,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onBack }) =>
 
         if (isRegistering) {
             // REGISTER FLOW (Sempre cria Trial User)
-            if (!name || !email || !password) {
-                setError('Preencha todos os campos.');
+            // WhatsApp agora é obrigatório conforme solicitado
+            if (!name || !email || !password || !whatsapp) {
+                setError('Preencha todos os campos, incluindo WhatsApp.');
                 return;
             }
             const result = registerAccount(name, email, password, whatsapp);
             if (result.success && result.user) {
-                setSuccessMsg('Conta criada com sucesso! Iniciando app...');
-                // Redireciona imediatamente
+                setSuccessMsg('Cadastro realizado! Liberando 2 dias grátis...');
+                // Redireciona imediatamente para o Dashboard
                 setTimeout(() => onLoginSuccess(result.user!), 1000);
             } else {
                 setError(result.message || 'Erro ao criar conta.');
@@ -63,10 +64,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onBack }) =>
                         <Heart className="text-brand-primary fill-brand-primary" size={32} />
                     </div>
                     <h2 className="text-2xl font-bold text-brand-text">
-                        {isRegistering ? 'Criar Acesso' : 'Entrar no Sistema'}
+                        {isRegistering ? 'Criar Acesso Grátis' : 'Entrar no Sistema'}
                     </h2>
                     <p className="text-sm text-brand-textSec">
-                        {isRegistering ? 'Inicie seu teste gratuito de 2 dias.' : 'Acesse seu painel ou área administrativa.'}
+                        {isRegistering ? 'Ganhe 2 dias de acesso liberado agora.' : 'Acesse seu painel ou área administrativa.'}
                     </p>
                 </div>
                 
@@ -123,7 +124,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onBack }) =>
 
                         {isRegistering && (
                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp (Opcional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp (Obrigatório)</label>
                                 <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input 
@@ -132,6 +133,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onBack }) =>
                                         placeholder="(XX) 99999-9999"
                                         value={whatsapp}
                                         onChange={(e) => setWhatsapp(e.target.value)}
+                                        required={isRegistering} 
                                     />
                                 </div>
                             </div>
@@ -168,7 +170,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onBack }) =>
                             type="submit"
                             className="w-full py-3 bg-brand-primary text-white rounded-xl font-bold hover:bg-brand-primary/90 transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2"
                         >
-                            {isRegistering ? 'Criar Conta e Iniciar Trial' : 'Entrar no Sistema'} <ArrowRight size={18} />
+                            {isRegistering ? 'Criar Conta e Iniciar 2 Dias Grátis' : 'Entrar no Sistema'} <ArrowRight size={18} />
                         </button>
                     </form>
                 </div>

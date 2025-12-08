@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Bell, LogOut, Search, Send, CheckCircle, RefreshCw, BarChart, UserPlus, X, Trash2, MessageCircle, ExternalLink, Unlock, Ban, AlertCircle, Edit, Save, Shield } from 'lucide-react';
+import { Users, Bell, LogOut, Search, Send, RefreshCw, UserPlus, X, Trash2, Edit, Save, Shield } from 'lucide-react';
 import { User, AppNotification } from '../types';
 import { PLANS } from '../constants';
-import { getAllUsers, adminUnlockUser, adminRevokeAccess, sendGlobalNotification, adminCreateUser, adminDeleteUser, adminUpdateUser } from '../services/storageService';
+import { getAllUsers, sendGlobalNotification, adminCreateUser, adminDeleteUser, adminUpdateUser } from '../services/storageService';
 
 interface AdminPanelProps {
     onLogout: () => void;
@@ -28,8 +28,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [formPass, setFormPass] = useState('');
     const [formWhatsapp, setFormWhatsapp] = useState('');
     const [formPlan, setFormPlan] = useState<'trial'|'pro'|'expired'>('trial');
-    const [formRole, setFormRole] = useState<'user'|'admin'>('user'); // NOVO: Cargo
-    const [formPlanId, setFormPlanId] = useState<string>(''); // NOVO: Produto Específico
+    const [formRole, setFormRole] = useState<'user'|'admin'>('user'); 
+    const [formPlanId, setFormPlanId] = useState<string>('');
     const [formExpireDate, setFormExpireDate] = useState('');
 
     // Notification State
@@ -185,11 +185,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         }, 3000);
     };
 
-    const openWhatsApp = (number: string) => {
-        const clean = number.replace(/\D/g, '');
-        window.open(`https://wa.me/${clean}`, '_blank');
-    }
-
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
             {/* Header */}
@@ -202,7 +197,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                             </div>
                             <div>
                                 <h1 className="text-lg font-bold leading-none">Painel Administrativo</h1>
-                                <span className="text-xs text-gray-400">Ambiente Seguro</span>
+                                <span className="text-xs text-gray-400">Gestão de Usuários</span>
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
@@ -221,7 +216,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
             {/* Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Stats and Tabs Omitted for Brevity (Same as before) */}
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex space-x-2 bg-white p-1 rounded-xl shadow-sm">
                         <button onClick={() => setActiveTab('users')} className={`flex items-center px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
@@ -238,11 +232,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* Filters */}
                         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-                             {/* ... Filters UI ... */}
                              <div className="flex gap-2 w-full md:w-auto">
                                 <div className="relative flex-1 md:w-64">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                    <input type="text" placeholder="Buscar..." className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-300 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                    <input type="text" placeholder="Buscar por Nome ou WhatsApp..." className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-300 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                                 </div>
                                 <button onClick={() => { resetForm(); setShowCreateModal(true); }} className="bg-brand-text text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-gray-800">
                                     <UserPlus size={14} className="mr-1" /> Novo
@@ -258,8 +251,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-3 font-bold">Cliente</th>
-                                        <th className="px-6 py-3 font-bold">Acesso</th>
-                                        <th className="px-6 py-3 font-bold">Plano / Produto</th>
+                                        <th className="px-6 py-3 font-bold">WhatsApp / Data</th>
+                                        <th className="px-6 py-3 font-bold">Status</th>
                                         <th className="px-6 py-3 font-bold text-right">Ações</th>
                                     </tr>
                                 </thead>
@@ -276,20 +269,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                                             {user.name}
                                                             {user.role === 'admin' && <span className="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[9px] rounded uppercase font-bold">Admin</span>}
                                                         </div>
-                                                        <div className="text-[10px] text-gray-400">{user.email || user.whatsapp}</div>
+                                                        <div className="text-[10px] text-gray-400">{user.email}</div>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <div className="text-sm font-medium text-gray-700">{user.whatsapp}</div>
+                                                <div className="text-[10px] text-gray-400">Trial desde: {new Date(user.trial_start).toLocaleDateString()}</div>
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
                                                     ${user.plan === 'pro' ? 'bg-green-100 text-green-700' : 
                                                       user.plan === 'trial' ? 'bg-yellow-100 text-yellow-800' : 
                                                       'bg-red-100 text-red-700'}`}>
-                                                    {user.plan.toUpperCase()}
+                                                    {user.plan === 'trial' ? 'FREE 2 DIAS' : user.plan.toUpperCase()}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-3 text-xs text-gray-600">
-                                                {user.plan_id ? (PLANS.find(p => p.id === user.plan_id)?.name || user.plan_id) : 'Trial Padrão'}
+                                                {user.plan === 'pro' && (
+                                                    <div className="text-[10px] text-gray-500 mt-1">
+                                                        {user.plan_id ? (PLANS.find(p => p.id === user.plan_id)?.name || 'Produto Admin') : 'Plano Manual'}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100">
@@ -311,7 +310,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     </div>
                 )}
                  
-                 {/* Notifications UI Omitted for Brevity (Same as before) */}
+                 {/* Notifications UI */}
                  {activeTab === 'notifications' && (
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -342,7 +341,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                             <h3 className="text-lg font-bold text-gray-800">
-                                {showEditModal ? 'Editar Usuário' : 'Criar Novo Acesso'}
+                                {showEditModal ? 'Editar Usuário / Liberar Acesso' : 'Criar Novo Acesso'}
                             </h3>
                             <button onClick={() => { setShowCreateModal(false); setShowEditModal(false); }} className="text-gray-400 hover:text-gray-600"><X /></button>
                         </div>
@@ -389,8 +388,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase">Plano</label>
                                     <select className="w-full border p-2 rounded-lg" value={formPlan} onChange={e=>setFormPlan(e.target.value as any)}>
-                                        <option value="trial">Trial</option>
-                                        <option value="pro">Pro</option>
+                                        <option value="trial">Trial (Free)</option>
+                                        <option value="pro">Pro (Pago)</option>
                                         <option value="expired">Expirado</option>
                                     </select>
                                 </div>

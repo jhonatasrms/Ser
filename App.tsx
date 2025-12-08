@@ -1,22 +1,19 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TopBar, BottomNav } from './components/Layout';
-import { TrialModal, PaymentModal, OffersModal, InstallModal, NotificationsHistoryModal } from './components/Modals';
+import { PaymentModal, OffersModal, InstallModal, NotificationsHistoryModal } from './components/Modals';
 import { NotificationToast } from './components/NotificationToast';
 import { AuthView } from './components/AuthView';
 import { AdminPanel } from './components/AdminPanel';
 import { User, ViewState, Plan, Task, AppNotification, Achievement } from './types';
 import { 
-    COPY, TASKS_DEFAULT, PLANS, PROMO_NOTIFICATIONS, BIO, 
-    SCREEN_PROBLEM, FAQ, ACHIEVEMENTS, SOLUTION_SECTION, 
-    HOW_IT_WORKS, BENEFITS_LIST, TESTIMONIALS, BONUS_LIST, JOURNEY_MODULES, PUSH_LIBRARY
+    COPY, TASKS_DEFAULT, PLANS, ACHIEVEMENTS, JOURNEY_MODULES
 } from './constants';
-import { checkStreak, getInitialUser, getTodayStr, registerTrial, saveUser, getLatestGlobalNotification } from './services/storageService';
+import { checkStreak, getInitialUser, getTodayStr, saveUser, getLatestGlobalNotification } from './services/storageService';
 import { 
-    Star, Clock, Zap, CheckCircle2, ListChecks, Heart, Smile, 
-    Smartphone, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, PlayCircle,
-    Volume2, StopCircle, Trophy, Flame, Lock, ArrowRight, XCircle, Gift, Quote,
-    ArrowLeft, Calendar, Unlock, Download, ShoppingBag, UserCircle
+    Star, Clock, Zap, ListChecks, Smile, 
+    ChevronDown, ChevronUp, PlayCircle,
+    Flame, Lock, ArrowLeft, Unlock, Download
 } from 'lucide-react';
 
 /* --- SUB-COMPONENTS FOR VIEWS --- */
@@ -47,8 +44,9 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {/* AJUSTE: Botão redireciona para LOGIN/CADASTRO */}
                     <button 
-                        onClick={onStartTrial}
+                        onClick={onGoToLogin}
                         className="w-full sm:w-auto px-8 py-4 bg-brand-primary text-white rounded-xl font-bold shadow-xl shadow-brand-primary/20 hover:bg-[#A0522D] transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center border-b-4 border-[#5D4037] text-lg group"
                     >
                         <PlayCircle size={22} className="mr-2 fill-current group-hover:scale-110 transition-transform" />
@@ -63,7 +61,6 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                 </div>
             </header>
             
-            {/* ... (REMAINING LANDING PAGE CONTENT OMITTED FOR BREVITY, ASSUME IT'S THERE) ... */}
             {/* 8. OFERTAS / CONTEÚDOS (GRID LAYOUT) */}
             <section id="contents-section" className="py-20 bg-white">
                 <div className="max-w-5xl mx-auto px-4">
@@ -107,16 +104,6 @@ const HomeView: React.FC<{ onStartTrial: () => void; onSelectPlan: (p: Plan) => 
                      </div>
                 </div>
             </section>
-            
-            <footer className="bg-brand-card/50 border-t border-brand-primary/10 py-8 text-center text-brand-textSec/60 text-sm mt-12 mb-16 md:mb-0">
-                <p>© 2024 Método Sereninho. Feito com carinho por Nathalia Martins.</p>
-                <div className="mt-2 space-x-4 flex justify-center items-center">
-                    <span className="hover:text-brand-primary cursor-pointer transition-colors">Termos de Uso</span>
-                    <button onClick={onGoToLogin} className="hover:text-brand-primary flex items-center gap-1">
-                        <UserCircle size={12} /> Área do Cliente
-                    </button>
-                </div>
-            </footer>
         </div>
     );
 };
@@ -273,17 +260,6 @@ const DashboardView: React.FC<{
                     </div>
                 </div>
                 
-                 {/* Achievements Preview */}
-                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {ACHIEVEMENTS.map(ach => {
-                        const isUnlocked = user.unlockedBadges.includes(ach.id);
-                        return (
-                             <div key={ach.id} className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${isUnlocked ? 'bg-yellow-100 border-yellow-400 text-yellow-600' : 'bg-gray-100 border-gray-200 text-gray-300 scale-90 grayscale'}`}>
-                                 <Trophy size={16} fill={isUnlocked ? "currentColor" : "none"} />
-                             </div>
-                        )
-                    })}
-                </div>
             </div>
 
             {/* INSTALL APP BANNER */}
@@ -361,7 +337,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
 const App: React.FC = () => {
     const [view, setView] = useState<ViewState>('home');
     const [user, setUser] = useState<User | null>(null);
-    const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
     const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
@@ -470,20 +445,14 @@ const App: React.FC = () => {
 
     const navigate = (newView: ViewState) => {
         if (newView === 'dashboard' && !user) {
-            setIsTrialModalOpen(true);
+            navigate('login'); // Redireciona para login se não tiver user
             return;
         }
         window.location.hash = newView;
         setView(newView);
     };
 
-    const handleTrialSubmit = (name: string, whatsapp: string) => {
-        const newUser = registerTrial(name, whatsapp);
-        setUser(newUser);
-        setIsTrialModalOpen(false);
-        window.location.hash = 'dashboard';
-        setView('dashboard');
-    };
+    // Removed handleTrialSubmit - Registration is now handled in AuthView
 
     const handlePlanSelect = (plan: Plan) => {
         if (plan.paymentLink) {
@@ -570,7 +539,7 @@ const App: React.FC = () => {
             <main className="fade-in">
                 {view === 'home' && (
                     <HomeView 
-                        onStartTrial={() => setIsTrialModalOpen(true)} 
+                        onStartTrial={() => navigate('login')} 
                         onSelectPlan={handlePlanSelect} 
                         onGoToLogin={() => navigate('login')}
                     />
@@ -618,7 +587,6 @@ const App: React.FC = () => {
             )}
             
             {/* MODALS */}
-            <TrialModal isOpen={isTrialModalOpen} onClose={() => setIsTrialModalOpen(false)} onSubmit={handleTrialSubmit} />
             <OffersModal isOpen={isOffersModalOpen} onClose={() => setIsOffersModalOpen(false)} onSelectPlan={handlePlanSelect} />
             <NotificationsHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={notificationHistory} onAction={handleNotificationAction} />
             <InstallModal isOpen={isInstallModalOpen} onClose={() => setIsInstallModalOpen(false)} />

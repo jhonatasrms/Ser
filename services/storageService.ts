@@ -33,24 +33,6 @@ const ensureDatabaseInitialized = () => {
                 completedTasks: {}, 
                 unlockedBadges: [] 
             },
-            // USUÁRIO EXEMPLO TRIAL
-            { 
-                id: 'u_demo_trial', 
-                name: 'Maria Exemplo', 
-                email: 'maria@teste.com', 
-                password: '123', 
-                whatsapp: '11999999999', 
-                role: 'user', 
-                plan: 'trial', 
-                trial_start: now.toISOString(), 
-                trial_end: tomorrow.toISOString(), 
-                access_active: true, 
-                points: 50, 
-                streak: 1, 
-                lastActiveDate: getTodayStr(), 
-                completedTasks: {}, 
-                unlockedBadges: [] 
-            }
         ];
         localStorage.setItem(DB_USERS_KEY, JSON.stringify(initialData));
     }
@@ -114,7 +96,7 @@ export const logoutUser = () => {
     localStorage.removeItem(STORAGE_KEY);
 };
 
-// Lógica de Expiração Automática
+// Lógica de Expiração Automática (48h Trial)
 const refreshUserStatus = (user: User): User => {
     if (user.role === 'admin') return user; 
 
@@ -125,18 +107,19 @@ const refreshUserStatus = (user: User): User => {
     let isActive = false;
     let currentPlan: 'trial' | 'pro' | 'expired' = 'expired';
 
-    // 1. Verifica Plano Pro
+    // 1. Verifica Plano Pro (Manual ou Pago)
     if (user.plan_id && accessExpires && accessExpires > now) {
         isActive = true;
         currentPlan = 'pro';
     } 
-    // 2. Verifica Trial
+    // 2. Verifica Trial (48h)
     else if (trialEnd > now) {
         isActive = true;
         currentPlan = 'trial';
     }
 
     if (user.access_active !== isActive || user.plan !== currentPlan) {
+        // Se mudou o status, atualiza o usuário
         return { ...user, access_active: isActive, plan: currentPlan };
     }
 
@@ -155,13 +138,9 @@ export const authenticate = (login: string, pass: string): { success: boolean, i
     );
 
     if (found) {
-        if (found.role === 'admin' || (login === 'jhonatasrms' && pass === '1234')) {
-            saveUser(found);
-            return { success: true, isAdmin: true, user: found };
-        }
-        
-        saveUser(found); 
-        return { success: true, isAdmin: false, user: found };
+        const refreshed = refreshUserStatus(found);
+        saveUser(refreshed); 
+        return { success: true, isAdmin: refreshed.role === 'admin', user: refreshed };
     }
 
     // Fallback Admin de Emergência
@@ -186,7 +165,7 @@ export const registerAccount = (name: string, email: string, pass: string, whats
 
     const now = new Date();
     const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + 2); // Trial de 48h
+    trialEnd.setDate(trialEnd.getDate() + 2); // Trial de 48h (2 dias)
 
     const newUser: User = {
         id: `u_${Date.now()}`,
@@ -195,7 +174,7 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         password: pass,
         whatsapp,
         role: 'user', // Cadastro público é sempre User
-        plan: 'trial', // Cadastro público é sempre Trial
+        plan: 'trial', // Inicia como Trial
         trial_start: now.toISOString(),
         trial_end: trialEnd.toISOString(),
         access_active: true,
@@ -213,37 +192,13 @@ export const registerAccount = (name: string, email: string, pass: string, whats
 };
 
 export const registerTrial = (name: string, whatsapp: string): User => {
-  const now = new Date();
-  const trialEnd = new Date(now);
-  trialEnd.setDate(trialEnd.getDate() + 2); 
-
-  const newUser: User = {
-    id: `u_${Date.now()}_trial`,
-    name,
-    whatsapp,
-    email: `${whatsapp}@trial.com`, 
-    password: 'trial_user', 
-    role: 'user',
-    plan: 'trial',
-    trial_start: now.toISOString(),
-    trial_end: trialEnd.toISOString(),
-    access_active: true,
-    points: 0,
-    streak: 0,
-    lastActiveDate: getTodayStr(),
-    completedTasks: {},
-    unlockedBadges: [],
-    consent_whatsapp: true
-  };
-  
-  updateUserInDB(newUser);
-  saveUser(newUser);
-  return newUser;
+    // Legacy support, now redirects to registerAccount logic
+    // but just in case called directly
+    return registerAccount(name, `${whatsapp}@trial.com`, '123456', whatsapp).user!;
 };
 
 // --- AÇÕES ADMINISTRATIVAS (CRUD) ---
 
-// Agora suporta criação de Admins e definição de PlanID
 export const adminCreateUser = (name: string, email: string, pass: string, planType: 'trial'|'pro', role: 'user'|'admin' = 'user', planId?: string): User => {
     const now = new Date();
     let trialEnd = new Date(now);
@@ -253,7 +208,7 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
     if (planType === 'trial') {
         trialEnd.setDate(trialEnd.getDate() + 2);
     } else {
-        trialEnd.setDate(trialEnd.getDate() - 1); 
+        trialEnd.setDate(trialEnd.getDate() - 1); // Expire trial immediately
         expiresAt = new Date(now);
         expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 Ano
     }
@@ -264,7 +219,7 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
         email,
         password: pass,
         whatsapp: '',
-        role: role, // Define se é User ou Admin
+        role: role, 
         plan: planType,
         plan_id: planId || (planType === 'pro' ? 'p_manual_admin' : undefined),
         trial_start: now.toISOString(),
