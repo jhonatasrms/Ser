@@ -9,31 +9,43 @@ export const getTodayStr = () => new Date().toISOString().split('T')[0];
 
 const ensureDatabaseInitialized = () => {
     const stored = localStorage.getItem(DB_USERS_KEY);
-    if (!stored) {
-        const now = new Date();
-        const initialData: User[] = [
-            // ADMIN PADRÃO
-            { 
-                id: 'admin_master', 
-                name: 'Administrador', 
-                email: 'jhonatasrms@gmail.com', 
-                password: '1234', 
-                whatsapp: '5500000000000', 
-                role: 'admin', 
-                created_at: now.toISOString(),
-                access_level: 'full',
-                tasks_unlocked: 999,
-                product_released: true,
-                plan_status: 'paid',
-                trial_end: now.toISOString(),
-                points: 9999, 
-                streak: 999, 
-                lastActiveDate: getTodayStr(), 
-                completedTasks: {}, 
-                unlockedBadges: [] 
-            },
-        ];
-        localStorage.setItem(DB_USERS_KEY, JSON.stringify(initialData));
+    let users: User[] = stored ? JSON.parse(stored) : [];
+    
+    // Check if admin exists, if not, create/restore it
+    const adminIndex = users.findIndex(u => u.id === 'admin_master');
+    
+    const adminUser: User = { 
+        id: 'admin_master', 
+        name: 'Administrador', 
+        email: 'jhonatasrms@gmail.com', 
+        password: '1234', 
+        whatsapp: '5500000000000', 
+        role: 'admin', 
+        created_at: new Date().toISOString(),
+        access_level: 'full',
+        tasks_unlocked: 999,
+        product_released: true,
+        plan_status: 'paid',
+        trial_end: new Date().toISOString(),
+        points: 9999, 
+        streak: 999, 
+        lastActiveDate: getTodayStr(), 
+        completedTasks: {}, 
+        unlockedBadges: [],
+        origin: 'system_seed'
+    };
+
+    if (adminIndex === -1) {
+        users.unshift(adminUser);
+        localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
+    } else {
+        // Optional: Force reset admin password/role if needed, or leave as is to preserve changes
+        // For development safety, we ensure credentials match request
+        if (users[adminIndex].password !== '1234') {
+            users[adminIndex].password = '1234';
+            users[adminIndex].email = 'jhonatasrms@gmail.com'; // Ensure email matches expectation if needed
+            localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
+        }
     }
 };
 
@@ -85,7 +97,7 @@ const checkTrialStatus = (user: User): User => {
     // MAS não muda o access_level (que deve ser 'partial' por padrão ou 'full' se pago)
     if (user.plan_status === 'trial' && now > trialEnd) {
         updated.plan_status = 'expired';
-        // Se estava em trial full, volta para partial se expirou e não comprou
+        // Se estava em trial full (originario de visualização temporaria), volta para partial
         if (!user.product_released) {
              updated.access_level = 'partial';
              updated.tasks_unlocked = 3; // Reset to default free tasks
@@ -128,10 +140,20 @@ export const logoutUser = () => {
 
 export const authenticate = (login: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
     const users = getAllUsers();
-    const cleanLogin = login.toLowerCase().trim();
+    const cleanLogin = login.trim(); // Case sensitive password, case insensitive login usually
     
+    // Check 1: Explicit Admin Login requested by user
+    if (cleanLogin === 'jhonatasrms' && pass === '1234') {
+        const admin = users.find(u => u.id === 'admin_master');
+        if (admin) {
+            saveUser(admin);
+            return { success: true, isAdmin: true, user: admin };
+        }
+    }
+
+    // Check 2: Normal Email/WhatsApp Login
     const found = users.find(u => 
-        (u.email?.toLowerCase() === cleanLogin || u.whatsapp === cleanLogin) && 
+        (u.email?.toLowerCase() === cleanLogin.toLowerCase() || u.whatsapp === cleanLogin) && 
         u.password === pass
     );
 
@@ -139,15 +161,6 @@ export const authenticate = (login: string, pass: string): { success: boolean, i
         const refreshed = checkTrialStatus(found);
         saveUser(refreshed); 
         return { success: true, isAdmin: refreshed.role === 'admin', user: refreshed };
-    }
-    
-    // Fallback Admin
-    if (login === 'jhonatasrms' && pass === '1234') {
-        const admin = users.find(u => u.id === 'admin_master');
-        if(admin) {
-             saveUser(admin);
-             return { success: true, isAdmin: true, user: admin };
-        }
     }
 
     return { success: false, message: 'Credenciais inválidas.' };
@@ -175,8 +188,8 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         // --- NEW LOGIC ---
         created_at: now.toISOString(),
         origin: 'visualizar_1_dia',
-        access_level: 'partial', // Inicia parcial, mas Trial libera temporariamente na view
-        tasks_unlocked: 3,
+        access_level: 'partial', // Inicia parcial, o Trial libera acesso via lógica de UI ou upgrade
+        tasks_unlocked: 3, // Default free tasks
         product_released: false,
         plan_status: 'trial', 
         trial_end: trialEnd.toISOString(),
