@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Lock, User, ArrowLeft, Heart, Mail, Phone, ArrowRight } from 'lucide-react';
 import { authenticate, registerAccount } from '../services/storageService';
@@ -43,8 +44,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
         } else {
             // LOGIN FLOW
             const result = authenticate(email, password);
-            if (result.success) {
-                onLoginSuccess(!!result.isAdmin);
+            if (result.success && result.user) {
+                const isAdmin = result.user.role === 'admin' || result.user.role === 'superadmin';
+                onLoginSuccess(isAdmin);
             } else {
                 setError(result.message || 'Erro ao entrar.');
             }

@@ -1,4 +1,5 @@
 
+
 import { Plan, Task, AppNotification, Achievement, Testimonial, DayModule, Product } from './types';
 
 export const APP_NAME = "Método Sereninho";
@@ -11,7 +12,8 @@ export const PRODUCTS: Product[] = [
         description: 'Acesso completo aos módulos diários e trilha principal.',
         total_tasks: 999,
         partial_default: 3,
-        active: true
+        active: true,
+        price: 47.90
     },
     {
         id: 'kit_calmaria',
@@ -19,7 +21,8 @@ export const PRODUCTS: Product[] = [
         description: 'Técnicas de emergência para crises pontuais.',
         total_tasks: 10,
         partial_default: 2,
-        active: true
+        active: true,
+        price: 17.90
     },
     {
         id: 'sos_birras',
@@ -27,7 +30,8 @@ export const PRODUCTS: Product[] = [
         description: 'Guia de áudio para pais.',
         total_tasks: 20,
         partial_default: 1,
-        active: true
+        active: true,
+        price: 29.90
     },
     {
         id: 'guia_sono',
@@ -35,19 +39,21 @@ export const PRODUCTS: Product[] = [
         description: 'Rotinas noturnas e e-book.',
         total_tasks: 1,
         partial_default: 0,
-        active: true
+        active: true,
+        price: 37.00
     }
 ];
 
 // --- SISTEMA DE NOTIFICAÇÕES (Push Simulator) ---
 export const PUSH_LIBRARY: AppNotification[] = [
-    { id: "push_1", title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
-    { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
+    { id: "push_1", user_id: 'system', title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
+    { id: "push_2", user_id: 'system', title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
 ];
 
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
   {
     id: "promo_flash_wa",
+    user_id: 'system',
     title: "⚡ OFERTA RELÂMPAGO",
     message: "Fale com o suporte agora e garanta uma condição especial no PIX!",
     link: "https://wa.me/5567993535250",
@@ -201,6 +207,7 @@ export const BONUS_LIST = [
 export const PLANS: Plan[] = [
   { 
     id: "main_method", 
+    product_id: "main_method",
     name: "Método Sereninho Completo", 
     price: "47,90", 
     currency: "BRL", 
@@ -219,6 +226,7 @@ export const PLANS: Plan[] = [
   },
   { 
     id: "kit_calmaria", 
+    product_id: "kit_calmaria",
     name: "Kit Calmaria Express", 
     price: "17,90", 
     currency: "BRL", 
@@ -237,6 +245,7 @@ export const PLANS: Plan[] = [
   },
   { 
     id: "sos_birras", 
+    product_id: "sos_birras",
     name: "SOS Birras (Áudios)", 
     price: "29,90", 
     currency: "BRL", 
@@ -254,6 +263,7 @@ export const PLANS: Plan[] = [
   },
   { 
     id: "guia_sono", 
+    product_id: "guia_sono",
     name: "Guia Sono Profundo", 
     price: "37,00", 
     currency: "BRL", 

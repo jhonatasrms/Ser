@@ -1,11 +1,9 @@
 
 import React, { useState } from 'react';
-import { User, Task, UserProductRelease } from '../types';
-import { TASKS_DEFAULT, ACHIEVEMENTS, JOURNEY_MODULES, PRODUCTS } from '../constants';
-import { getTodayStr, logoutUser } from '../services/storageService';
-import { 
-    Star, Clock, Zap, Flame, Lock, ArrowLeft, Unlock, Download, LogOut, Heart
-} from 'lucide-react';
+import { User, Task } from '../types';
+import { TASKS_DEFAULT, JOURNEY_MODULES } from '../constants';
+import { getTodayStr, logoutUser, checkAccess } from '../services/storageService';
+import { Star, Clock, Zap, Flame, Lock, ArrowLeft, Unlock, LogOut } from 'lucide-react';
 import { ChevronDown, ChevronUp, ListChecks } from 'lucide-react';
 
 /* HELPERS */
@@ -16,7 +14,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
     const [expanded, setExpanded] = useState(false); 
     const handleExpand = () => { if (isLocked) { if (onUnlock) onUnlock(); return; } playClickSound(); setExpanded(!expanded); }; 
     const handleComplete = (e: React.MouseEvent) => { e.stopPropagation(); if (isLocked) return; if (!isCompleted) playSuccessSound(); onToggle(); }; 
-    
     return ( 
         <div className={`rounded-xl border transition-all duration-300 relative overflow-hidden ${isLocked ? 'bg-gray-100 border-gray-200 opacity-90 cursor-pointer hover:border-brand-primary/20' : isCompleted ? 'border-brand-secondary/50 bg-brand-secondary/10' : 'bg-brand-card border-brand-primary/10 shadow-sm hover:shadow-md hover:border-brand-primary/30 transform hover:-translate-y-0.5'}`} onClick={isLocked ? onUnlock : undefined}> 
             {isLocked && ( <div className="absolute inset-0 z-10 bg-white/40 flex items-center justify-center backdrop-blur-[1px]"> <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center text-sm font-bold text-gray-500 border border-gray-200"> <Lock size={16} className="mr-2" /> Bloqueado </div> </div> )} 
@@ -40,7 +37,6 @@ const TaskItem: React.FC<{ task: Task; isCompleted: boolean; onToggle: () => voi
                     {task.image && ( <div className="mb-5 rounded-xl overflow-hidden h-48 w-full relative shadow-inner"> <img src={task.image} alt={task.title} className="w-full h-full object-cover transform transition hover:scale-105 duration-700" loading="lazy" /> </div> )} 
                     <div className="p-4 bg-white rounded-xl border border-brand-primary/10 space-y-4 shadow-sm"> 
                         <p className="flex items-start"><span className="font-bold text-brand-primary min-w-[80px] block">Por que:</span> <span className="text-brand-textSec italic">{task.why}</span></p> 
-                        <div> <span className="font-bold text-brand-primary block mb-2">Benefícios:</span> <div className="flex flex-wrap gap-2"> {task.benefits.map((b, i) => ( <span key={i} className="px-2.5 py-1 bg-brand-bg rounded-md border border-brand-primary/10 text-xs font-bold text-brand-textSec">{b}</span> ))} </div> </div> 
                         {task.steps && task.steps.length > 0 && ( <div className="pt-4 border-t border-brand-primary/10"> <div className="flex justify-between items-center mb-3"> <span className="font-bold text-brand-primary flex items-center text-base"> <ListChecks size={18} className="mr-2" /> Como brincar: </span> </div> <ol className="space-y-3"> {task.steps.map((step, idx) => ( <li key={idx} className="flex items-start text-brand-text"> <span className="font-bold text-brand-secondary mr-2">{idx + 1}.</span> <span className="leading-snug">{step}</span> </li> ))} </ol> </div> )} 
                     </div> 
                 </div> 
@@ -54,27 +50,17 @@ export const DashboardView: React.FC<{
     onToggleTask: (taskId: string) => void; 
     onUnlock: () => void;
     onOpenInstall: () => void;
-}> = ({ user, onToggleTask, onUnlock, onOpenInstall }) => {
+}> = ({ user, onToggleTask, onUnlock }) => {
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
-
     if (!user) return <div className="p-8 text-center text-brand-text">Carregando...</div>;
 
-    const handleLogout = () => {
-        logoutUser();
-        window.location.hash = 'login';
-        window.location.reload();
-    };
+    const handleLogout = () => { logoutUser(); window.location.hash = 'login'; window.location.reload(); };
 
-    // ACCESS LOGIC for Main Method (Product: main_method)
-    const methodRelease = user.releases?.find(r => r.product_id === 'main_method');
-    
-    // Check Trial (Legacy or New)
-    const isTrialActive = user.plan_status === 'trial' && new Date() < new Date(user.trial_end);
-    
-    const hasFullAccess = methodRelease?.access_level === 'full';
-    
-    // Tasks Unlocked: If full access, infinite. If partial/trial, use the release limit or fallback to 3.
-    const unlockLimit = hasFullAccess ? 999 : (methodRelease?.tasks_unlocked || 3);
+    // Use RBAC Service Logic
+    const access = checkAccess(user.id, 'main_method');
+    const hasFullAccess = access.level === 'full';
+    const tasksUnlocked = access.tasks;
+    const isTrial = access.level === 'partial';
 
     const todayStr = getTodayStr();
     
@@ -92,12 +78,9 @@ export const DashboardView: React.FC<{
                         </button>
                     )}
                  </div>
-
                  <div className="space-y-6">
                     {TASKS_DEFAULT.map((task, index) => {
-                        // Lock logic based on product access
-                        const isLocked = index >= unlockLimit;
-
+                        const isLocked = index >= tasksUnlocked;
                         return (
                             <TaskItem 
                                 key={task.id} 
@@ -114,23 +97,15 @@ export const DashboardView: React.FC<{
         );
     }
 
-    // MAIN DASHBOARD VIEW
     return (
         <div className="pb-24 max-w-3xl mx-auto px-4 pt-6 font-sans">
-             
-             {/* HEADER COM LOGOUT */}
              <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-xl font-bold text-brand-text">Olá, {user.name.split(' ')[0]}</h1>
                     <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${hasFullAccess ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                            {hasFullAccess ? 'Acesso Liberado' : 'Acesso Parcial'}
+                            {hasFullAccess ? 'Premium' : 'Trial Ativo'}
                         </span>
-                        {isTrialActive && !hasFullAccess && (
-                             <span className="text-[10px] text-gray-500 font-medium">
-                                 Teste Grátis Ativo
-                             </span>
-                        )}
                     </div>
                 </div>
                 <button onClick={handleLogout} className="p-2 text-red-400 hover:bg-red-50 rounded-full" title="Sair">
@@ -138,20 +113,18 @@ export const DashboardView: React.FC<{
                 </button>
              </div>
 
-             {/* BANNER SE PARCIAL */}
              {!hasFullAccess && (
                  <div onClick={onUnlock} className="bg-brand-highlight text-white p-4 rounded-xl shadow-md mb-6 cursor-pointer transform hover:scale-[1.02] transition-transform">
                      <div className="flex items-center justify-between">
                          <div>
-                             <h3 className="font-bold text-lg">Acesso Restrito</h3>
-                             <p className="text-xs opacity-90">Você está vendo apenas uma prévia. Libere tudo agora.</p>
+                             <h3 className="font-bold text-lg">Modo Teste</h3>
+                             <p className="text-xs opacity-90">Libere o acesso completo para continuar.</p>
                          </div>
                          <Lock className="opacity-80" />
                      </div>
                  </div>
              )}
 
-             {/* STATS */}
              <div className="bg-brand-card rounded-2xl p-6 shadow-sm border border-brand-primary/10 mb-6 relative overflow-hidden">
                 <div className="flex justify-between items-center relative z-10">
                     <h2 className="text-lg font-bold text-brand-text">Sua Jornada</h2>
@@ -167,28 +140,14 @@ export const DashboardView: React.FC<{
             </div>
 
             <h3 className="text-lg font-bold text-brand-text mb-4 pl-1">Módulos Diários</h3>
-
             <div className="space-y-4">
                 {JOURNEY_MODULES.map((module) => (
-                    <div 
-                        key={module.id}
-                        onClick={() => module.locked ? onUnlock() : setSelectedDay(module.day)}
-                        className={`relative rounded-2xl p-5 border-2 transition-all duration-200 cursor-pointer group ${module.locked ? 'bg-gray-50 border-gray-100 opacity-90' : 'bg-white border-brand-primary/30 shadow-md hover:scale-[1.02]'}`}
-                    >
-                        {module.locked ? (
-                            <div className="absolute top-4 right-4 bg-gray-200 p-1.5 rounded-full text-gray-500"><Lock size={16} /></div>
-                        ) : (
-                            <div className="absolute top-4 right-4 bg-green-100 p-1.5 rounded-full text-green-600"><Unlock size={16} /></div>
-                        )}
-
+                    <div key={module.id} onClick={() => module.locked ? onUnlock() : setSelectedDay(module.day)} className={`relative rounded-2xl p-5 border-2 transition-all duration-200 cursor-pointer group ${module.locked ? 'bg-gray-50 border-gray-100 opacity-90' : 'bg-white border-brand-primary/30 shadow-md hover:scale-[1.02]'}`}>
+                        {module.locked ? <div className="absolute top-4 right-4 bg-gray-200 p-1.5 rounded-full text-gray-500"><Lock size={16} /></div> : <div className="absolute top-4 right-4 bg-green-100 p-1.5 rounded-full text-green-600"><Unlock size={16} /></div>}
                         <div className="flex items-start">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0 shadow-sm ${module.locked ? 'bg-gray-200 text-gray-400' : 'bg-brand-primary text-white'}`}>
-                                {module.day}
-                            </div>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0 shadow-sm ${module.locked ? 'bg-gray-200 text-gray-400' : 'bg-brand-primary text-white'}`}>{module.day}</div>
                             <div className="pr-8">
-                                <h4 className={`font-bold text-lg mb-1 ${module.locked ? 'text-gray-500' : 'text-brand-text'}`}>
-                                    {module.title}
-                                </h4>
+                                <h4 className={`font-bold text-lg mb-1 ${module.locked ? 'text-gray-500' : 'text-brand-text'}`}>{module.title}</h4>
                                 <p className="text-sm text-gray-500 leading-snug">{module.subtitle}</p>
                             </div>
                         </div>
