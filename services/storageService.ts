@@ -1,24 +1,129 @@
 
-import { User, AppNotification, Purchase } from '../types';
+import { User, AppNotification } from '../types';
 
-const STORAGE_KEY = 'sereninho_current_user'; // Session
-const DB_USERS_KEY = 'sereninho_db_users'; // "Database"
-const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs';
+const STORAGE_KEY = 'sereninho_current_user'; // Sessão atual do navegador
+const DB_USERS_KEY = 'sereninho_db_users'; // "Banco de Dados" simulado (todos os usuários)
+const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs'; // Notificações globais
 
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-// --- AUTH SERVICES ---
-
-// Load current session & Refresh Status
-export const getInitialUser = (): User | null => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
-  const user = JSON.parse(stored);
-  return refreshUserStatus(user);
+// --- AUXILIAR: MOCKS INICIAIS ---
+// Garante que sempre exista o Admin e alguns dados para teste
+const ensureDatabaseInitialized = () => {
+    const stored = localStorage.getItem(DB_USERS_KEY);
+    if (!stored) {
+        const now = new Date();
+        const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const initialData: User[] = [
+            // ADMIN PADRÃO
+            { 
+                id: 'admin_master', 
+                name: 'Administrador', 
+                email: 'jhonatasrms@gmail.com', // Login Admin
+                password: '1234', 
+                whatsapp: '5500000000000', 
+                role: 'admin', 
+                plan: 'pro', 
+                trial_start: now.toISOString(), 
+                trial_end: now.toISOString(), 
+                access_active: true, 
+                points: 9999, 
+                streak: 999, 
+                lastActiveDate: getTodayStr(), 
+                completedTasks: {}, 
+                unlockedBadges: [] 
+            },
+            // USUÁRIO EXEMPLO TRIAL
+            { 
+                id: 'u_demo_trial', 
+                name: 'Maria Exemplo', 
+                email: 'maria@teste.com', 
+                password: '123', 
+                whatsapp: '11999999999', 
+                role: 'user', 
+                plan: 'trial', 
+                trial_start: now.toISOString(), 
+                trial_end: tomorrow.toISOString(), 
+                access_active: true, 
+                points: 50, 
+                streak: 1, 
+                lastActiveDate: getTodayStr(), 
+                completedTasks: {}, 
+                unlockedBadges: [] 
+            }
+        ];
+        localStorage.setItem(DB_USERS_KEY, JSON.stringify(initialData));
+    }
 };
 
-// Logic to check if trial is expired or plan is active
+// Chama na inicialização do arquivo
+ensureDatabaseInitialized();
+
+// --- LEITURA E ESCRITA NO "BANCO" ---
+
+export const getAllUsers = (): User[] => {
+    ensureDatabaseInitialized(); // Garante consistência
+    const stored = localStorage.getItem(DB_USERS_KEY);
+    return stored ? JSON.parse(stored) : [];
+};
+
+// Salva a lista completa no localStorage
+const saveAllUsers = (users: User[]) => {
+    localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
+};
+
+// Atualiza ou insere um usuário no banco global
+export const updateUserInDB = (userToSave: User) => {
+    const users = getAllUsers();
+    const index = users.findIndex(u => u.id === userToSave.id);
+    
+    if (index >= 0) {
+        users[index] = userToSave;
+    } else {
+        users.push(userToSave);
+    }
+    saveAllUsers(users);
+    
+    // Se o usuário atualizado for o mesmo da sessão, atualiza a sessão também
+    const currentUser = getInitialUser();
+    if (currentUser && currentUser.id === userToSave.id) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userToSave));
+    }
+};
+
+// --- AUTH & SESSÃO ---
+
+export const getInitialUser = (): User | null => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    const user = JSON.parse(stored);
+    
+    // Sempre revalida com o banco para pegar status atualizado (ex: se o admin mudou o plano)
+    const dbUsers = getAllUsers();
+    const freshUser = dbUsers.find(u => u.id === user.id);
+    
+    if (freshUser) {
+        return refreshUserStatus(freshUser);
+    }
+    return refreshUserStatus(user);
+};
+
+export const saveUser = (user: User) => {
+    // 1. Salva na Sessão
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    // 2. Salva no Banco Global (Persistência)
+    updateUserInDB(user);
+};
+
+export const logoutUser = () => {
+    localStorage.removeItem(STORAGE_KEY);
+};
+
+// Lógica de Expiração Automática
 const refreshUserStatus = (user: User): User => {
+    if (user.role === 'admin') return user; // Admin nunca expira
+
     const now = new Date();
     const trialEnd = new Date(user.trial_end);
     const accessExpires = user.access_expires_at ? new Date(user.access_expires_at) : null;
@@ -26,86 +131,58 @@ const refreshUserStatus = (user: User): User => {
     let isActive = false;
     let currentPlan: 'trial' | 'pro' | 'expired' = 'expired';
 
-    // 1. Check Pro Plan
+    // 1. Verifica Plano Pro
     if (user.plan_id && accessExpires && accessExpires > now) {
         isActive = true;
         currentPlan = 'pro';
     } 
-    // 2. Check Trial
+    // 2. Verifica Trial
     else if (trialEnd > now) {
         isActive = true;
         currentPlan = 'trial';
     }
 
-    // Only update if changed to avoid loop
+    // Se mudou algo, retorna o objeto atualizado (sem salvar no DB ainda para evitar loops de render)
     if (user.access_active !== isActive || user.plan !== currentPlan) {
-        const updated = { ...user, access_active: isActive, plan: currentPlan };
-        // Don't save to DB here to avoid side-effects in render, just return updated view
-        return updated; 
+        return { ...user, access_active: isActive, plan: currentPlan };
     }
 
     return user;
 }
 
-// Save current session
-export const saveUser = (user: User) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  updateUserInDB(user); // Sync with DB
-};
-
-// Logout
-export const logoutUser = () => {
-    localStorage.removeItem(STORAGE_KEY);
-};
-
-// "Database" Access
-export const getAllUsers = (): User[] => {
-    const stored = localStorage.getItem(DB_USERS_KEY);
-    if (!stored) {
-        const mocks = generateMockUsers();
-        localStorage.setItem(DB_USERS_KEY, JSON.stringify(mocks));
-        return mocks;
-    }
-    const users = JSON.parse(stored);
-    // Refresh status for all users on load
-    return users.map((u: User) => refreshUserStatus(u));
-};
-
-export const updateUserInDB = (updatedUser: User) => {
-    const users = getAllUsers();
-    const index = users.findIndex(u => u.id === updatedUser.id);
-    
-    if (index >= 0) {
-        users[index] = updatedUser;
-    } else {
-        users.push(updatedUser);
-    }
-    
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
-};
-
-export const adminDeleteUser = (userId: string) => {
-    const users = getAllUsers();
-    const filtered = users.filter(u => u.id !== userId);
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(filtered));
-};
-
-// AUTHENTICATION
+// --- AÇÕES DE LOGIN E REGISTRO ---
 
 export const authenticate = (login: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
-    // 1. Check Admin (Hardcoded for Staging as requested)
-    if (login === 'jhonatasrms' && pass === '1234') {
-        return { success: true, isAdmin: true };
-    }
-
-    // 2. Check Users DB
+    // 1. Busca no banco mockado
     const users = getAllUsers();
-    // Allow login by email or whatsapp (mock logic)
-    const found = users.find(u => (u.email === login || u.whatsapp === login) && u.password === pass);
+    
+    // Login aceita Email ou WhatsApp (somente números)
+    const cleanLogin = login.toLowerCase().trim();
+    
+    const found = users.find(u => 
+        (u.email?.toLowerCase() === cleanLogin || u.whatsapp === cleanLogin || u.email === 'jhonatasrms@gmail.com') && 
+        u.password === pass
+    );
 
     if (found) {
-        saveUser(found); // Set session
+        // Verifica Admin hardcoded por segurança extra ou pela role
+        if (found.role === 'admin' || (login === 'jhonatasrms' && pass === '1234')) {
+            saveUser(found);
+            return { success: true, isAdmin: true, user: found };
+        }
+        
+        saveUser(found); // Inicia sessão
         return { success: true, isAdmin: false, user: found };
+    }
+
+    // Fallback Admin de Emergência (caso o banco tenha sido limpo)
+    if ((login === 'jhonatasrms' || login === 'jhonatasrms@gmail.com') && pass === '1234') {
+        const fallbackAdmin: User = { 
+            id: 'admin_fallback', name: 'Admin', email: 'jhonatasrms@gmail.com', whatsapp: '', role: 'admin', 
+            plan: 'pro', trial_start: '', trial_end: '', access_active: true, points: 0, streak: 0, lastActiveDate: '', completedTasks: {}, unlockedBadges: [] 
+        };
+        saveUser(fallbackAdmin);
+        return { success: true, isAdmin: true, user: fallbackAdmin };
     }
 
     return { success: false, message: 'Credenciais inválidas.' };
@@ -114,13 +191,13 @@ export const authenticate = (login: string, pass: string): { success: boolean, i
 export const registerAccount = (name: string, email: string, pass: string, whatsapp: string): { success: boolean, message?: string, user?: User } => {
     const users = getAllUsers();
     
-    if (users.find(u => u.email === email)) {
+    if (users.find(u => u.email?.toLowerCase() === email.toLowerCase())) {
         return { success: false, message: 'Este email já está cadastrado.' };
     }
 
     const now = new Date();
     const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + 2); // 2 Days Trial
+    trialEnd.setDate(trialEnd.getDate() + 2); // Trial de 48h
 
     const newUser: User = {
         id: `u_${Date.now()}`,
@@ -141,21 +218,23 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         consent_whatsapp: true
     };
 
-    updateUserInDB(newUser);
-    saveUser(newUser); // Auto login
+    updateUserInDB(newUser); // Salva no banco global
+    saveUser(newUser); // Loga o usuário imediatamente
     return { success: true, user: newUser };
 };
 
-// Trial Registration (No password flow)
+// Registro Rápido (Trial Modal)
 export const registerTrial = (name: string, whatsapp: string): User => {
   const now = new Date();
   const trialEnd = new Date(now);
-  trialEnd.setDate(trialEnd.getDate() + 2); // 2 Days Trial
+  trialEnd.setDate(trialEnd.getDate() + 2); 
 
   const newUser: User = {
-    id: `u_${Date.now()}`,
+    id: `u_${Date.now()}_trial`,
     name,
     whatsapp,
+    email: `${whatsapp}@trial.com`, // Email placeholder
+    password: 'trial_user', // Senha placeholder
     role: 'user',
     plan: 'trial',
     trial_start: now.toISOString(),
@@ -169,11 +248,12 @@ export const registerTrial = (name: string, whatsapp: string): User => {
     consent_whatsapp: true
   };
   
+  updateUserInDB(newUser); // Importante: Salvar no banco para o admin ver
   saveUser(newUser);
   return newUser;
 };
 
-// --- ADMIN ACTIONS ---
+// --- AÇÕES ADMINISTRATIVAS (CRUD) ---
 
 export const adminCreateUser = (name: string, email: string, pass: string, planType: 'trial'|'pro'): User => {
     const now = new Date();
@@ -186,10 +266,10 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
         trialEnd.setDate(trialEnd.getDate() + 2);
     } else {
         // Pro Access
-        trialEnd.setDate(trialEnd.getDate() - 1); // Expire trial
+        trialEnd.setDate(trialEnd.getDate() - 1); 
         planId = 'p_manual_admin';
         expiresAt = new Date(now);
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 Year
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 Ano
     }
 
     const newUser: User = {
@@ -215,47 +295,58 @@ export const adminCreateUser = (name: string, email: string, pass: string, planT
     return newUser;
 };
 
-export const adminUnlockUser = (userId: string, days: number = 365) => {
+// NOVA FUNÇÃO: Editar Usuário
+export const adminUpdateUser = (userId: string, data: Partial<User>) => {
     const users = getAllUsers();
-    const updatedUsers = users.map(u => {
-        if (u.id === userId) {
-            const now = new Date();
-            const expires = new Date(now);
-            expires.setDate(expires.getDate() + days);
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx >= 0) {
+        // Mescla os dados antigos com os novos
+        const updatedUser = { ...users[idx], ...data };
+        
+        // Recalcula status baseado nas novas datas se necessário
+        const refreshedUser = refreshUserStatus(updatedUser);
+        
+        users[idx] = refreshedUser;
+        saveAllUsers(users);
+        return refreshedUser;
+    }
+    return null;
+};
 
-            return { 
-                ...u, 
-                plan: 'pro' as const, 
-                plan_id: 'p_admin_unlock',
-                access_active: true,
-                access_expires_at: expires.toISOString(),
-                access_unlocked_by: 'admin',
-                access_unlocked_at: now.toISOString()
-            };
-        }
-        return u;
+export const adminDeleteUser = (userId: string) => {
+    const users = getAllUsers();
+    const filtered = users.filter(u => u.id !== userId);
+    saveAllUsers(filtered);
+};
+
+export const adminUnlockUser = (userId: string, days: number = 365) => {
+    const now = new Date();
+    const expires = new Date(now);
+    expires.setDate(expires.getDate() + days);
+
+    adminUpdateUser(userId, {
+        plan: 'pro',
+        plan_id: 'p_admin_unlock',
+        access_active: true,
+        access_expires_at: expires.toISOString(),
+        access_unlocked_by: 'admin',
+        access_unlocked_at: now.toISOString()
     });
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(updatedUsers));
 };
 
 export const adminRevokeAccess = (userId: string) => {
-    const users = getAllUsers();
-    const updatedUsers = users.map(u => {
-        if (u.id === userId) {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            return { 
-                ...u, 
-                plan: 'expired' as const, 
-                access_active: false,
-                trial_end: yesterday.toISOString(),
-                access_expires_at: undefined
-            };
-        }
-        return u;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    adminUpdateUser(userId, {
+        plan: 'expired',
+        access_active: false,
+        trial_end: yesterday.toISOString(),
+        access_expires_at: undefined
     });
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(updatedUsers));
-}
+};
+
+// --- STREAK & NOTIFICAÇÕES GLOBAIS ---
 
 export const checkStreak = (user: User): User => {
     const today = getTodayStr();
@@ -279,39 +370,11 @@ export const checkStreak = (user: User): User => {
     return updatedUser;
 };
 
-// Generate initial mock data if empty
-const generateMockUsers = (): User[] => {
-    const now = new Date();
-    const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
-
-    return [
-        { 
-            id: 'u_1', name: 'Maria Silva', email: 'maria@email.com', password: '123', whatsapp: '11999999999', 
-            role: 'user', plan: 'trial', trial_start: yesterday.toISOString(), trial_end: tomorrow.toISOString(), access_active: true,
-            points: 150, streak: 3, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] 
-        },
-        { 
-            id: 'u_2', name: 'João Santos', email: 'joao@email.com', password: '123', whatsapp: '21988888888', 
-            role: 'user', plan: 'pro', plan_id: 'p_gold', trial_start: yesterday.toISOString(), trial_end: yesterday.toISOString(), access_active: true, access_expires_at: tomorrow.toISOString(),
-            points: 1200, streak: 45, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] 
-        },
-        { 
-            id: 'u_3', name: 'Pedro Expire', email: 'pedro@email.com', password: '123', whatsapp: '21988888888', 
-            role: 'user', plan: 'expired', trial_start: yesterday.toISOString(), trial_end: yesterday.toISOString(), access_active: false,
-            points: 50, streak: 0, lastActiveDate: getTodayStr(), completedTasks: {}, unlockedBadges: [] 
-        },
-    ];
-};
-
-// --- GLOBAL NOTIFICATIONS ---
-
 export const sendGlobalNotification = (notif: AppNotification) => {
     const stored = localStorage.getItem(GLOBAL_NOTIF_KEY);
     const current: AppNotification[] = stored ? JSON.parse(stored) : [];
     const newNotif = { ...notif, timestamp: Date.now(), isGlobal: true };
     
-    // Keep last 10
     const updated = [newNotif, ...current].slice(0, 10);
     localStorage.setItem(GLOBAL_NOTIF_KEY, JSON.stringify(updated));
     return newNotif;

@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Bell, LogOut, Search, Send, CheckCircle, RefreshCw, BarChart, UserPlus, X, Trash2, MessageCircle, ExternalLink, Unlock, Ban, AlertCircle } from 'lucide-react';
+import { Users, Bell, LogOut, Search, Send, CheckCircle, RefreshCw, BarChart, UserPlus, X, Trash2, MessageCircle, ExternalLink, Unlock, Ban, AlertCircle, Edit, Save } from 'lucide-react';
 import { User, AppNotification } from '../types';
-import { getAllUsers, adminUnlockUser, adminRevokeAccess, sendGlobalNotification, adminCreateUser, adminDeleteUser } from '../services/storageService';
+import { getAllUsers, adminUnlockUser, adminRevokeAccess, sendGlobalNotification, adminCreateUser, adminDeleteUser, adminUpdateUser } from '../services/storageService';
 
 interface AdminPanelProps {
     onLogout: () => void;
@@ -14,8 +14,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
+    
+    // Modals
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Create/Edit User State
+    const [formEmail, setFormEmail] = useState('');
+    const [formName, setFormName] = useState('');
+    const [formPass, setFormPass] = useState('');
+    const [formWhatsapp, setFormWhatsapp] = useState('');
+    const [formPlan, setFormPlan] = useState<'trial'|'pro'|'expired'>('trial');
+    const [formExpireDate, setFormExpireDate] = useState('');
 
     // Notification State
     const [notifTitle, setNotifTitle] = useState('');
@@ -24,19 +37,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [notifLinkText, setNotifLinkText] = useState('Ver Agora');
     const [notifType, setNotifType] = useState<'promo' | 'info' | 'success'>('promo');
     const [notifSent, setNotifSent] = useState(false);
-    const [sentHistory, setSentHistory] = useState<AppNotification[]>([]);
 
-    // Create User State
-    const [newUserEmail, setNewUserEmail] = useState('');
-    const [newUserName, setNewUserName] = useState('');
-    const [newUserPass, setNewUserPass] = useState('');
-    const [newUserPlan, setNewUserPlan] = useState<'trial'|'pro'>('pro');
-
+    // Initial Load & Polling
     useEffect(() => {
         loadUsers();
-        loadNotifHistory();
-    }, []);
+        // Atualiza a lista a cada 5 segundos para ver novos cadastros
+        const interval = setInterval(() => {
+            if (!showEditModal && !showCreateModal) {
+                const dbUsers = getAllUsers();
+                setUsers(dbUsers);
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [showEditModal, showCreateModal]);
 
+    // Filtering Logic
     useEffect(() => {
         let result = users;
         
@@ -59,38 +74,88 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     }, [searchTerm, users, filterStatus]);
 
     const loadUsers = () => {
-        setLoading(true);
-        setTimeout(() => {
-            const dbUsers = getAllUsers();
-            setUsers(dbUsers);
-            setLoading(false);
-        }, 500);
+        const dbUsers = getAllUsers();
+        setUsers(dbUsers);
     };
 
-    const loadNotifHistory = () => {
-        const stored = localStorage.getItem('sereninho_global_notifs');
-        if (stored) setSentHistory(JSON.parse(stored));
-    }
+    // --- ACTIONS ---
 
-    const handleUnlockUser = (userId: string) => {
-        if(window.confirm('Confirmar liberação de acesso PRO por 1 ano?')) {
-            adminUnlockUser(userId);
-            loadUsers();
+    const openEditModal = (user: User) => {
+        setEditingUser(user);
+        setFormName(user.name);
+        setFormEmail(user.email || '');
+        setFormWhatsapp(user.whatsapp);
+        setFormPlan(user.plan);
+        setFormPass(user.password || '');
+        
+        // Set date string YYYY-MM-DD
+        if (user.access_expires_at) {
+            setFormExpireDate(new Date(user.access_expires_at).toISOString().split('T')[0]);
+        } else if (user.trial_end) {
+            setFormExpireDate(new Date(user.trial_end).toISOString().split('T')[0]);
+        } else {
+            setFormExpireDate('');
         }
+
+        setShowEditModal(true);
     };
 
-    const handleRevokeUser = (userId: string) => {
-         if(window.confirm('O usuário perderá o acesso imediatamente. Confirmar?')) {
-            adminRevokeAccess(userId);
-            loadUsers();
+    const handleSaveEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        // Monta objeto de update
+        const updates: any = {
+            name: formName,
+            email: formEmail,
+            whatsapp: formWhatsapp,
+            password: formPass,
+            plan: formPlan
+        };
+
+        // Logic para datas
+        if (formPlan === 'pro') {
+            const expDate = formExpireDate ? new Date(formExpireDate) : new Date();
+            if (!formExpireDate) expDate.setFullYear(expDate.getFullYear() + 1); // Default 1 ano se vazio
+            updates.access_expires_at = expDate.toISOString();
+            updates.access_active = true;
+            updates.plan_id = 'p_admin_edit';
+        } else if (formPlan === 'trial') {
+            const trialDate = formExpireDate ? new Date(formExpireDate) : new Date();
+            if (!formExpireDate) trialDate.setDate(trialDate.getDate() + 2);
+            updates.trial_end = trialDate.toISOString();
+            updates.access_active = true;
+            updates.plan_id = undefined;
+            updates.access_expires_at = undefined;
+        } else {
+            updates.access_active = false;
         }
-    }
+
+        adminUpdateUser(editingUser.id, updates);
+        setShowEditModal(false);
+        setEditingUser(null);
+        loadUsers();
+    };
 
     const handleDeleteUser = (userId: string) => {
         if (window.confirm('Tem certeza que deseja excluir este usuário permanentemente?')) {
             adminDeleteUser(userId);
             loadUsers();
         }
+    }
+
+    const handleCreateUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        if(formEmail && formName && formPass) {
+            adminCreateUser(formName, formEmail, formPass, formPlan as 'trial'|'pro');
+            setShowCreateModal(false);
+            resetForm();
+            loadUsers();
+        }
+    }
+
+    const resetForm = () => {
+        setFormName(''); setFormEmail(''); setFormPass(''); setFormWhatsapp(''); setFormPlan('trial');
     }
 
     const handleSendNotification = (e: React.FormEvent) => {
@@ -108,8 +173,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
         sendGlobalNotification(notification);
         setNotifSent(true);
-        loadNotifHistory();
-        
         setTimeout(() => {
             setNotifSent(false);
             setNotifTitle('');
@@ -118,28 +181,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         }, 3000);
     };
 
-    const handleCreateUser = (e: React.FormEvent) => {
-        e.preventDefault();
-        if(newUserEmail && newUserName && newUserPass) {
-            adminCreateUser(newUserName, newUserEmail, newUserPass, newUserPlan);
-            setShowCreateModal(false);
-            setNewUserName('');
-            setNewUserEmail('');
-            setNewUserPass('');
-            loadUsers();
-        }
-    }
-
     const openWhatsApp = (number: string) => {
         const clean = number.replace(/\D/g, '');
         window.open(`https://wa.me/${clean}`, '_blank');
     }
-
-    // Stats
-    const totalUsers = users.length;
-    const proUsers = users.filter(u => u.plan === 'pro').length;
-    const trialUsers = users.filter(u => u.plan === 'trial').length;
-    const expiredUsers = users.filter(u => u.plan === 'expired').length;
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
@@ -157,7 +202,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <span className="hidden md:inline-block text-sm bg-white/10 px-3 py-1 rounded-full text-gray-300">Admin: jhonatasrms</span>
+                            <span className="hidden md:inline-block text-sm bg-white/10 px-3 py-1 rounded-full text-gray-300">Admin</span>
                             <button 
                                 onClick={onLogout}
                                 className="p-2 hover:bg-red-500/20 text-red-400 rounded-full transition-colors flex items-center gap-2"
@@ -173,27 +218,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
             {/* Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 
-                {/* Stats Cards */}
+                {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <p className="text-xs text-gray-500 font-bold uppercase">Total</p>
-                        <h2 className="text-2xl font-bold text-gray-900">{totalUsers}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">{users.length}</h2>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-green-100 bg-green-50/50">
                         <p className="text-xs text-green-700 font-bold uppercase">Ativos (Pro)</p>
-                        <h2 className="text-2xl font-bold text-green-700">{proUsers}</h2>
+                        <h2 className="text-2xl font-bold text-green-700">{users.filter(u=>u.plan==='pro').length}</h2>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-100 bg-yellow-50/50">
                         <p className="text-xs text-yellow-700 font-bold uppercase">Trial (2 Dias)</p>
-                        <h2 className="text-2xl font-bold text-yellow-700">{trialUsers}</h2>
+                        <h2 className="text-2xl font-bold text-yellow-700">{users.filter(u=>u.plan==='trial').length}</h2>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-red-100 bg-red-50/50">
                         <p className="text-xs text-red-700 font-bold uppercase">Expirados</p>
-                        <h2 className="text-2xl font-bold text-red-700">{expiredUsers}</h2>
+                        <h2 className="text-2xl font-bold text-red-700">{users.filter(u=>u.plan==='expired').length}</h2>
                     </div>
                 </div>
 
-                {/* Main Tabs */}
+                {/* Tabs */}
                 <div className="flex space-x-2 bg-white p-1 rounded-xl shadow-sm mb-6 w-fit">
                     <button onClick={() => setActiveTab('users')} className={`flex items-center px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
                         <Users className="mr-2" size={16} /> Usuários
@@ -203,28 +248,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     </button>
                 </div>
 
-                {/* USER MANAGEMENT TAB */}
+                {/* USERS TABLE */}
                 {activeTab === 'users' && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        {/* Filters & Actions */}
+                        {/* Filters */}
                         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-                            <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                            <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
                                 <button onClick={() => setFilterStatus('all')} className={`px-3 py-1 text-xs font-bold rounded-full ${filterStatus === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-600'}`}>Todos</button>
                                 <button onClick={() => setFilterStatus('trial')} className={`px-3 py-1 text-xs font-bold rounded-full ${filterStatus === 'trial' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-600'}`}>Trial</button>
                                 <button onClick={() => setFilterStatus('pro')} className={`px-3 py-1 text-xs font-bold rounded-full ${filterStatus === 'pro' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'}`}>Pro</button>
-                                <button onClick={() => setFilterStatus('expired')} className={`px-3 py-1 text-xs font-bold rounded-full ${filterStatus === 'expired' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600'}`}>Expirados</button>
                             </div>
                             
                             <div className="flex gap-2 w-full md:w-auto">
                                 <div className="relative flex-1 md:w-64">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                    <input type="text" placeholder="Buscar..." className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-300 text-sm outline-none focus:border-brand-primary" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                    <input type="text" placeholder="Buscar..." className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-gray-300 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                                 </div>
-                                <button onClick={() => setShowCreateModal(true)} className="bg-brand-text text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-gray-800">
+                                <button onClick={() => { resetForm(); setShowCreateModal(true); }} className="bg-brand-text text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center hover:bg-gray-800">
                                     <UserPlus size={14} className="mr-1" /> Novo
                                 </button>
                                 <button onClick={loadUsers} className="text-gray-500 hover:bg-gray-200 p-1.5 rounded-lg border border-gray-300">
-                                    <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                                    <RefreshCw size={16} />
                                 </button>
                             </div>
                         </div>
@@ -234,8 +278,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-3 font-bold">Cliente</th>
-                                        <th className="px-6 py-3 font-bold">Status Acesso</th>
-                                        <th className="px-6 py-3 font-bold">Validade</th>
+                                        <th className="px-6 py-3 font-bold">Status</th>
+                                        <th className="px-6 py-3 font-bold">Vencimento</th>
                                         <th className="px-6 py-3 font-bold">Engajamento</th>
                                         <th className="px-6 py-3 font-bold text-right">Ações</th>
                                     </tr>
@@ -250,57 +294,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-gray-900 text-sm">{user.name}</div>
-                                                        <div className="text-[10px] text-gray-400">{user.email || 'Sem email'}</div>
+                                                        <div className="text-[10px] text-gray-400">{user.email || user.whatsapp}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
-                                                    ${user.plan === 'pro' ? 'bg-green-100 text-green-700 border border-green-200' : 
-                                                      user.plan === 'trial' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 
-                                                      'bg-red-100 text-red-700 border border-red-200'}`}>
-                                                    {user.plan === 'pro' && <CheckCircle size={10} className="mr-1"/>}
-                                                    {user.plan === 'trial' && <RefreshCw size={10} className="mr-1"/>}
-                                                    {user.plan === 'expired' && <Ban size={10} className="mr-1"/>}
+                                                    ${user.plan === 'pro' ? 'bg-green-100 text-green-700' : 
+                                                      user.plan === 'trial' ? 'bg-yellow-100 text-yellow-800' : 
+                                                      'bg-red-100 text-red-700'}`}>
                                                     {user.plan.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 text-xs text-gray-600">
                                                 {user.plan === 'pro' ? (
-                                                    <div>Até: {new Date(user.access_expires_at || '').toLocaleDateString()}</div>
+                                                    new Date(user.access_expires_at || '').toLocaleDateString()
                                                 ) : user.plan === 'trial' ? (
-                                                    <div>Expira: {new Date(user.trial_end).toLocaleDateString()}</div>
-                                                ) : (
-                                                    <div className="text-red-400 font-bold">Expirado</div>
-                                                )}
+                                                    new Date(user.trial_end).toLocaleDateString()
+                                                ) : '-'}
                                             </td>
                                             <td className="px-6 py-3 text-xs">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="flex items-center text-blue-600 font-bold"><BarChart size={12} className="mr-1" /> {user.points}</span>
-                                                    <span className="flex items-center text-orange-600 font-bold"><CheckCircle size={12} className="mr-1" /> {user.streak}d</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-blue-600">{user.points}pts</span>
+                                                    <span className="font-bold text-orange-600">{user.streak}d</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-3 text-right">
-                                                <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100">
+                                                    <button onClick={() => openEditModal(user)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                                        <Edit size={14} />
+                                                    </button>
+                                                    
                                                     {user.whatsapp && (
-                                                        <button onClick={() => openWhatsApp(user.whatsapp)} className="p-1.5 text-green-600 hover:bg-green-50 rounded border border-transparent hover:border-green-200" title="WhatsApp">
+                                                        <button onClick={() => openWhatsApp(user.whatsapp)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="WhatsApp">
                                                             <MessageCircle size={14} />
                                                         </button>
                                                     )}
-                                                    
-                                                    {user.plan !== 'pro' && (
-                                                        <button onClick={() => handleUnlockUser(user.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-200" title="Liberar Acesso Pro">
-                                                            <Unlock size={14} />
-                                                        </button>
-                                                    )}
-                                                    
-                                                    {user.plan === 'pro' && (
-                                                        <button onClick={() => handleRevokeUser(user.id)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded border border-transparent hover:border-orange-200" title="Revogar Acesso">
-                                                            <Ban size={14} />
-                                                        </button>
-                                                    )}
 
-                                                    <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded border border-transparent hover:border-red-200" title="Excluir">
+                                                    <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Excluir">
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
@@ -313,7 +344,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                     </div>
                 )}
                 
-                {/* Notification Tab Content (Similar to previous, keeping it concise) */}
+                {/* NOTIFICATIONS TAB */}
                 {activeTab === 'notifications' && (
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -328,6 +359,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                                 <select className="w-full px-4 py-2 rounded-lg border" value={notifType} onChange={e => setNotifType(e.target.value as any)}>
                                     <option value="promo">Promoção</option>
                                     <option value="info">Informação</option>
+                                    <option value="success">Sucesso</option>
                                 </select>
                             </div>
                             <button type="submit" className="w-full py-3 bg-brand-primary text-white rounded-xl font-bold hover:bg-gray-800 transition-colors">Enviar Agora</button>
@@ -337,23 +369,54 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                 )}
             </main>
 
-            {/* CREATE USER MODAL */}
-            {showCreateModal && (
+            {/* CREATE/EDIT MODAL */}
+            {(showCreateModal || showEditModal) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                         <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                            <h3 className="text-lg font-bold text-gray-800">Criar Acesso Manual</h3>
-                            <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+                            <h3 className="text-lg font-bold text-gray-800">
+                                {showEditModal ? 'Editar Usuário' : 'Criar Novo Acesso'}
+                            </h3>
+                            <button onClick={() => { setShowCreateModal(false); setShowEditModal(false); }} className="text-gray-400 hover:text-gray-600"><X /></button>
                         </div>
-                        <form onSubmit={handleCreateUser} className="space-y-4">
-                            <input type="text" placeholder="Nome" className="w-full border p-3 rounded-xl" value={newUserName} onChange={e=>setNewUserName(e.target.value)} required />
-                            <input type="email" placeholder="Email" className="w-full border p-3 rounded-xl" value={newUserEmail} onChange={e=>setNewUserEmail(e.target.value)} required />
-                            <input type="text" placeholder="Senha" className="w-full border p-3 rounded-xl" value={newUserPass} onChange={e=>setNewUserPass(e.target.value)} required />
-                            <select className="w-full border p-3 rounded-xl" value={newUserPlan} onChange={e=>setNewUserPlan(e.target.value as any)}>
-                                <option value="trial">Trial (2 Dias)</option>
-                                <option value="pro">Pro (1 Ano)</option>
-                            </select>
-                            <button type="submit" className="w-full bg-brand-text text-white py-3 rounded-xl font-bold mt-2">Criar</button>
+                        <form onSubmit={showEditModal ? handleSaveEdit : handleCreateUser} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Nome</label>
+                                <input type="text" className="w-full border p-2 rounded-lg" value={formName} onChange={e=>setFormName(e.target.value)} required />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Email</label>
+                                <input type="email" className="w-full border p-2 rounded-lg" value={formEmail} onChange={e=>setFormEmail(e.target.value)} required />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">WhatsApp</label>
+                                <input type="text" className="w-full border p-2 rounded-lg" value={formWhatsapp} onChange={e=>setFormWhatsapp(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Senha</label>
+                                <input type="text" className="w-full border p-2 rounded-lg" value={formPass} onChange={e=>setFormPass(e.target.value)} required />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500 uppercase">Plano</label>
+                                    <select className="w-full border p-2 rounded-lg" value={formPlan} onChange={e=>setFormPlan(e.target.value as any)}>
+                                        <option value="trial">Trial</option>
+                                        <option value="pro">Pro</option>
+                                        <option value="expired">Expirado</option>
+                                    </select>
+                                </div>
+                                {showEditModal && (
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Vencimento</label>
+                                        <input type="date" className="w-full border p-2 rounded-lg" value={formExpireDate} onChange={e=>setFormExpireDate(e.target.value)} />
+                                    </div>
+                                )}
+                            </div>
+
+                            <button type="submit" className="w-full bg-brand-text text-white py-3 rounded-xl font-bold mt-2 flex justify-center items-center gap-2">
+                                <Save size={18} /> {showEditModal ? 'Salvar Alterações' : 'Criar Conta'}
+                            </button>
                         </form>
                     </div>
                 </div>

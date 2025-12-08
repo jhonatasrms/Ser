@@ -33,8 +33,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
             }
             const result = registerAccount(name, email, password, whatsapp);
             if (result.success) {
-                setSuccessMsg('Conta criada com sucesso! Trial de 2 dias ativado.');
-                setTimeout(() => onLoginSuccess(false), 1500);
+                setSuccessMsg('Conta criada com sucesso! Redirecionando...');
+                // Pequeno delay para ler a msg de sucesso, depois entra direto
+                setTimeout(() => onLoginSuccess(false), 1000);
             } else {
                 setError(result.message || 'Erro ao criar conta.');
             }
