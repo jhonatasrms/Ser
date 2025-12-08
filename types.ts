@@ -8,31 +8,30 @@ export interface User {
   name: string;
   whatsapp: string;
   email?: string;
-  password?: string; // Hashed in backend, simulated here
+  password?: string;
   role: UserRole;
   
-  // Access Control
-  plan: 'trial' | 'pro' | 'expired'; // Derived status
-  plan_id?: string; // UUID of active plan
+  // New Schema Fields
+  created_at: string;
+  origin?: string; // e.g. "visualizar_1_dia"
   
-  // Trial Logic
-  trial_start: string; // ISO Date
-  trial_end: string;   // ISO Date
+  // Access Logic
+  access_level: 'partial' | 'full'; // Default 'partial'
+  tasks_unlocked: number; // Default 3
+  product_released: boolean; // Default false
+  released_by?: string; // Admin ID
+  released_at?: string;
   
-  // Access Flags
-  access_active: boolean;
-  access_expires_at?: string; // ISO Date
-  access_unlocked_by?: string; // Admin ID
-  access_unlocked_at?: string;
+  plan_status: 'free' | 'trial' | 'paid' | 'expired';
+  trial_end: string; // ISO Date
   
   // App Stats
   points: number;
   streak: number;
-  lastActiveDate: string; // YYYY-MM-DD
-  completedTasks: Record<string, boolean>; // Key: "YYYY-MM-DD_taskId"
+  lastActiveDate: string;
+  completedTasks: Record<string, boolean>;
   unlockedBadges: string[];
   
-  // Consent
   consent_whatsapp?: boolean;
 }
 
@@ -45,7 +44,7 @@ export interface Task {
   benefits: string[];
   image?: string;
   steps?: string[];
-  visible_for?: string[]; // ['trial', 'plan:uuid']
+  visible_for?: string[];
 }
 
 export interface Plan {
@@ -61,16 +60,6 @@ export interface Plan {
   paymentLink?: string; 
   image?: string; 
   category?: string; 
-}
-
-export interface Purchase {
-    id: string;
-    user_id: string;
-    plan_id: string;
-    amount: number;
-    status: 'pending' | 'paid' | 'failed' | 'refunded';
-    created_at: string;
-    admin_approved: boolean;
 }
 
 export interface AppNotification {
@@ -107,12 +96,4 @@ export interface DayModule {
     subtitle: string;
     locked: boolean;
     image: string; 
-}
-
-export interface AppState {
-  view: ViewState;
-  user: User | null;
-  showTrialModal: boolean;
-  showPaymentModal: boolean;
-  selectedPlanId: string | null;
 }
