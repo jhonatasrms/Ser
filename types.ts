@@ -1,19 +1,39 @@
 
 export type ViewState = 'home' | 'dashboard' | 'pricing' | 'login' | 'admin';
 
+export type UserRole = 'user' | 'admin';
+
 export interface User {
-  id?: string;
+  id: string; // UUID in backend
   name: string;
   whatsapp: string;
   email?: string;
-  password?: string; // Added for auth
-  plan: 'trial' | 'pro' | 'expired';
-  trialEndDate: string; // ISO Date string
+  password?: string; // Hashed in backend, simulated here
+  role: UserRole;
+  
+  // Access Control
+  plan: 'trial' | 'pro' | 'expired'; // Derived status
+  plan_id?: string; // UUID of active plan
+  
+  // Trial Logic
+  trial_start: string; // ISO Date
+  trial_end: string;   // ISO Date
+  
+  // Access Flags
+  access_active: boolean;
+  access_expires_at?: string; // ISO Date
+  access_unlocked_by?: string; // Admin ID
+  access_unlocked_at?: string;
+  
+  // App Stats
   points: number;
   streak: number;
   lastActiveDate: string; // YYYY-MM-DD
   completedTasks: Record<string, boolean>; // Key: "YYYY-MM-DD_taskId"
   unlockedBadges: string[];
+  
+  // Consent
+  consent_whatsapp?: boolean;
 }
 
 export interface Task {
@@ -25,6 +45,7 @@ export interface Task {
   benefits: string[];
   image?: string;
   steps?: string[];
+  visible_for?: string[]; // ['trial', 'plan:uuid']
 }
 
 export interface Plan {
@@ -42,6 +63,16 @@ export interface Plan {
   category?: string; 
 }
 
+export interface Purchase {
+    id: string;
+    user_id: string;
+    plan_id: string;
+    amount: number;
+    status: 'pending' | 'paid' | 'failed' | 'refunded';
+    created_at: string;
+    admin_approved: boolean;
+}
+
 export interface AppNotification {
   id: string;
   title: string;
@@ -51,7 +82,8 @@ export interface AppNotification {
   type: 'promo' | 'info' | 'success';
   read?: boolean;
   timestamp?: number; 
-  isGlobal?: boolean; 
+  isGlobal?: boolean;
+  channel?: 'push' | 'whatsapp' | 'email';
 }
 
 export interface Achievement {

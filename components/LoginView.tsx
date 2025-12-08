@@ -33,7 +33,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
             }
             const result = registerAccount(name, email, password, whatsapp);
             if (result.success) {
-                setSuccessMsg('Conta criada com sucesso! Entrando...');
+                setSuccessMsg('Conta criada com sucesso! Trial de 2 dias ativado.');
                 setTimeout(() => onLoginSuccess(false), 1500);
             } else {
                 setError(result.message || 'Erro ao criar conta.');
@@ -64,7 +64,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
                         {isRegistering ? 'Criar Conta' : 'Acesso ao Método'}
                     </h2>
                     <p className="text-sm text-brand-textSec">
-                        {isRegistering ? 'Comece sua jornada de calma hoje' : 'Entre para continuar sua jornada'}
+                        {isRegistering ? 'Ganhe 2 dias de acesso gratuito' : 'Entre para continuar sua jornada'}
                     </p>
                 </div>
                 
@@ -109,7 +109,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input 
-                                    type="email" 
+                                    type="text" 
                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-primary outline-none"
                                     placeholder="seu@email.com"
                                     value={email}
@@ -166,7 +166,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) 
                             type="submit"
                             className="w-full py-3 bg-brand-primary text-white rounded-xl font-bold hover:bg-brand-primary/90 transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2"
                         >
-                            {isRegistering ? 'Criar Conta Grátis' : 'Entrar no Sistema'} <ArrowRight size={18} />
+                            {isRegistering ? 'Criar Conta e Iniciar Trial' : 'Entrar no Sistema'} <ArrowRight size={18} />
                         </button>
                     </form>
 
