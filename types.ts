@@ -3,6 +3,19 @@ export type ViewState = 'home' | 'dashboard' | 'pricing' | 'login' | 'admin';
 
 export type UserRole = 'user' | 'admin';
 
+export type AccessLevel = 'locked' | 'partial' | 'full';
+
+export type NotificationChannel = 'in_app' | 'whatsapp' | 'email';
+
+export interface UserProductRelease {
+    product_id: string;
+    access_level: AccessLevel;
+    tasks_unlocked: number;
+    released_by?: string; // Admin ID
+    released_at?: string;
+    expires_at?: string;
+}
+
 export interface User {
   id: string; // UUID in backend
   name: string;
@@ -11,21 +24,16 @@ export interface User {
   password?: string;
   role: UserRole;
   
-  // New Schema Fields
   created_at: string;
-  origin?: string; // e.g. "visualizar_1_dia"
+  origin?: string;
   
-  // Access Logic
-  access_level: 'partial' | 'full'; // Default 'partial'
-  tasks_unlocked: number; // Default 3
-  product_released: boolean; // Default false
-  released_by?: string; // Admin ID
-  released_at?: string;
+  // New Multi-Product Structure
+  releases: UserProductRelease[];
   
+  // Legacy fields (kept for migration types, but logic moves to releases)
   plan_status: 'free' | 'trial' | 'paid' | 'expired';
-  trial_end: string; // ISO Date
+  trial_end: string; 
   
-  // App Stats
   points: number;
   streak: number;
   lastActiveDate: string;
@@ -33,6 +41,15 @@ export interface User {
   unlockedBadges: string[];
   
   consent_whatsapp?: boolean;
+}
+
+export interface Product {
+    id: string;
+    title: string;
+    description: string;
+    total_tasks: number;
+    partial_default: number;
+    active: boolean;
 }
 
 export interface Task {
@@ -64,15 +81,16 @@ export interface Plan {
 
 export interface AppNotification {
   id: string;
+  user_id?: string; // Specific target
   title: string;
   message: string;
   link?: string; 
   linkText?: string;
   type: 'promo' | 'info' | 'success';
-  read?: boolean;
-  timestamp?: number; 
+  status: 'pending' | 'sent' | 'read';
+  channel: NotificationChannel;
+  timestamp: number; 
   isGlobal?: boolean;
-  channel?: 'push' | 'whatsapp' | 'email';
 }
 
 export interface Achievement {

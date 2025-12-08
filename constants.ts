@@ -1,16 +1,48 @@
 
-import { Plan, Task, AppNotification, Achievement, Testimonial, DayModule } from './types';
+import { Plan, Task, AppNotification, Achievement, Testimonial, DayModule, Product } from './types';
 
 export const APP_NAME = "Método Sereninho";
 
+// --- PRODUTOS DO SISTEMA (Items Gerenciáveis) ---
+export const PRODUCTS: Product[] = [
+    {
+        id: 'main_method',
+        title: 'Método Sereninho (Jornada 7 Dias)',
+        description: 'Acesso completo aos módulos diários e trilha principal.',
+        total_tasks: 999,
+        partial_default: 3,
+        active: true
+    },
+    {
+        id: 'kit_calmaria',
+        title: 'Kit Calmaria Express',
+        description: 'Técnicas de emergência para crises pontuais.',
+        total_tasks: 10,
+        partial_default: 2,
+        active: true
+    },
+    {
+        id: 'sos_birras',
+        title: 'SOS Birras (Áudios)',
+        description: 'Guia de áudio para pais.',
+        total_tasks: 20,
+        partial_default: 1,
+        active: true
+    },
+    {
+        id: 'guia_sono',
+        title: 'Guia Sono Profundo',
+        description: 'Rotinas noturnas e e-book.',
+        total_tasks: 1,
+        partial_default: 0,
+        active: true
+    }
+];
+
 // --- SISTEMA DE NOTIFICAÇÕES (Push Simulator) ---
 export const PUSH_LIBRARY: AppNotification[] = [
-    { id: "push_1", title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', linkText: "Voltar agora" },
-    { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', linkText: "Manter Ofensiva" },
-    { id: "push_3", title: "💤 Hora do Sono", message: "Temos uma técnica nova para dormir rápido. Vem ver!", type: 'info', link: '#contents-section', linkText: "Ver Técnica" },
-    { id: "push_4", title: "⏰ 3 minutinhos?", message: "É só o que você precisa para acalmar a casa agora.", type: 'info', link: '#dashboard', linkText: "Fazer agora" },
-    { id: "push_5", title: "🌟 Você ganhou!", message: "Uma nova estrela está esperando para ser coletada.", type: 'success', link: '#dashboard', linkText: "Coletar" },
-    { id: "push_offer_wa", title: "⚡ OFERTA RELÂMPAGO", message: "Desconto exclusivo liberado apenas no WhatsApp. Clique para resgatar!", type: 'promo', link: 'https://wa.me/5567993535250', linkText: "Resgatar no WhatsApp" }
+    { id: "push_1", title: "🥺 Senti sua falta!", message: "O Sereninho fica triste quando você não vem brincar...", type: 'info', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
+    { id: "push_2", title: "🔥 Não perca o fogo!", message: "Sua ofensiva está em risco. Complete uma tarefa hoje!", type: 'promo', link: '#dashboard', status: 'pending', channel: 'in_app', timestamp: Date.now() },
 ];
 
 export const PROMO_NOTIFICATIONS: AppNotification[] = [
@@ -20,7 +52,11 @@ export const PROMO_NOTIFICATIONS: AppNotification[] = [
     message: "Fale com o suporte agora e garanta uma condição especial no PIX!",
     link: "https://wa.me/5567993535250",
     linkText: "Chamar no WhatsApp",
-    type: "promo"
+    type: "promo",
+    status: 'sent',
+    channel: 'in_app',
+    timestamp: Date.now(),
+    isGlobal: true
   }
 ];
 
@@ -164,7 +200,7 @@ export const BONUS_LIST = [
 // --- PRODUTOS (Antigos Planos) ---
 export const PLANS: Plan[] = [
   { 
-    id: "p7", 
+    id: "main_method", 
     name: "Método Sereninho Completo", 
     price: "47,90", 
     currency: "BRL", 

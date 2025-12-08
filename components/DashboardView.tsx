@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { User, Task } from '../types';
-import { TASKS_DEFAULT, ACHIEVEMENTS, JOURNEY_MODULES } from '../constants';
+import { User, Task, UserProductRelease } from '../types';
+import { TASKS_DEFAULT, ACHIEVEMENTS, JOURNEY_MODULES, PRODUCTS } from '../constants';
 import { getTodayStr, logoutUser } from '../services/storageService';
 import { 
     Star, Clock, Zap, Flame, Lock, ArrowLeft, Unlock, Download, LogOut, Heart
@@ -65,13 +65,16 @@ export const DashboardView: React.FC<{
         window.location.reload();
     };
 
-    // ACCESS LOGIC
-    // O usuário vê tudo se: role=admin OR plan_status=paid OR (plan_status=trial AND agora < trial_end)
-    const isTrialActive = user.plan_status === 'trial' && new Date() < new Date(user.trial_end);
-    const hasFullAccess = user.access_level === 'full' || isTrialActive;
+    // ACCESS LOGIC for Main Method (Product: main_method)
+    const methodRelease = user.releases?.find(r => r.product_id === 'main_method');
     
-    // Se não tem acesso total, usa user.tasks_unlocked (padrão 3)
-    const unlockLimit = hasFullAccess ? 999 : (user.tasks_unlocked || 3);
+    // Check Trial (Legacy or New)
+    const isTrialActive = user.plan_status === 'trial' && new Date() < new Date(user.trial_end);
+    
+    const hasFullAccess = methodRelease?.access_level === 'full';
+    
+    // Tasks Unlocked: If full access, infinite. If partial/trial, use the release limit or fallback to 3.
+    const unlockLimit = hasFullAccess ? 999 : (methodRelease?.tasks_unlocked || 3);
 
     const todayStr = getTodayStr();
     
@@ -92,7 +95,7 @@ export const DashboardView: React.FC<{
 
                  <div className="space-y-6">
                     {TASKS_DEFAULT.map((task, index) => {
-                        // Bloqueio baseado no índice e nível de acesso
+                        // Lock logic based on product access
                         const isLocked = index >= unlockLimit;
 
                         return (
@@ -123,7 +126,7 @@ export const DashboardView: React.FC<{
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${hasFullAccess ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                             {hasFullAccess ? 'Acesso Liberado' : 'Acesso Parcial'}
                         </span>
-                        {isTrialActive && (
+                        {isTrialActive && !hasFullAccess && (
                              <span className="text-[10px] text-gray-500 font-medium">
                                  Teste Grátis Ativo
                              </span>

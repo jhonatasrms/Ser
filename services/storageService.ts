@@ -1,9 +1,11 @@
 
-import { User, AppNotification } from '../types';
+import { User, AppNotification, UserProductRelease, AccessLevel, NotificationChannel } from '../types';
+import { PRODUCTS } from '../constants';
 
 const STORAGE_KEY = 'sereninho_current_user'; // Sessão atual
 const DB_USERS_KEY = 'sereninho_db_users'; // Banco simulado
 const GLOBAL_NOTIF_KEY = 'sereninho_global_notifs'; 
+const USER_NOTIF_KEY_PREFIX = 'sereninho_notifs_';
 
 export const getTodayStr = () => new Date().toISOString().split('T')[0];
 
@@ -22,11 +24,17 @@ const ensureDatabaseInitialized = () => {
         whatsapp: '5500000000000', 
         role: 'admin', 
         created_at: new Date().toISOString(),
-        access_level: 'full',
-        tasks_unlocked: 999,
-        product_released: true,
-        plan_status: 'paid',
+        
+        releases: [
+            { product_id: 'main_method', access_level: 'full', tasks_unlocked: 999 },
+            { product_id: 'kit_calmaria', access_level: 'full', tasks_unlocked: 999 },
+            { product_id: 'sos_birras', access_level: 'full', tasks_unlocked: 999 },
+            { product_id: 'guia_sono', access_level: 'full', tasks_unlocked: 999 }
+        ],
+        
+        plan_status: 'paid', // Legacy
         trial_end: new Date().toISOString(),
+        
         points: 9999, 
         streak: 999, 
         lastActiveDate: getTodayStr(), 
@@ -39,11 +47,15 @@ const ensureDatabaseInitialized = () => {
         users.unshift(adminUser);
         localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
     } else {
-        // Optional: Force reset admin password/role if needed, or leave as is to preserve changes
-        // For development safety, we ensure credentials match request
+        // Ensure admin credentials
         if (users[adminIndex].password !== '1234') {
             users[adminIndex].password = '1234';
-            users[adminIndex].email = 'jhonatasrms@gmail.com'; // Ensure email matches expectation if needed
+            users[adminIndex].email = 'jhonatasrms@gmail.com'; 
+            localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
+        }
+        // Migração do Admin para ter releases se não tiver
+        if (!users[adminIndex].releases) {
+            users[adminIndex].releases = adminUser.releases;
             localStorage.setItem(DB_USERS_KEY, JSON.stringify(users));
         }
     }
@@ -51,12 +63,37 @@ const ensureDatabaseInitialized = () => {
 
 ensureDatabaseInitialized();
 
-// --- DATA ACCESS ---
+// --- DATA ACCESS & MIGRATION ---
+
+const migrateUser = (user: any): User => {
+    // Convert Legacy User format to New Format
+    if (!user.releases) {
+        user.releases = [];
+        // Se tinha acesso full global, libera o método principal
+        if (user.access_level === 'full' || user.product_released === true) {
+            user.releases.push({
+                product_id: 'main_method',
+                access_level: 'full',
+                tasks_unlocked: 999,
+                released_at: new Date().toISOString()
+            });
+        } else {
+            // Default partial access for main method
+            user.releases.push({
+                product_id: 'main_method',
+                access_level: 'partial',
+                tasks_unlocked: 3
+            });
+        }
+    }
+    return user as User;
+}
 
 export const getAllUsers = (): User[] => {
     ensureDatabaseInitialized();
     const stored = localStorage.getItem(DB_USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const rawUsers = stored ? JSON.parse(stored) : [];
+    return rawUsers.map(migrateUser);
 };
 
 const saveAllUsers = (users: User[]) => {
@@ -85,6 +122,24 @@ export const updateUserInDB = (userToSave: User) => {
 
 // --- AUTH & SESSION ---
 
+export const checkStreak = (user: User): User => {
+    const today = getTodayStr();
+    if (user.lastActiveDate === today) return user;
+
+    const last = new Date(user.lastActiveDate);
+    const now = new Date(today);
+    // Difference in days
+    const diffTime = Math.abs(now.getTime() - last.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+    if (diffDays > 1) {
+        const updated = { ...user, streak: 0 };
+        updateUserInDB(updated);
+        return updated;
+    }
+    return user;
+};
+
 const checkTrialStatus = (user: User): User => {
     if (user.role === 'admin') return user;
 
@@ -93,14 +148,14 @@ const checkTrialStatus = (user: User): User => {
     let updated = { ...user };
     let changed = false;
 
-    // Se o plano é trial e o tempo acabou, muda status para expired
-    // MAS não muda o access_level (que deve ser 'partial' por padrão ou 'full' se pago)
+    // Trial check for Main Method
+    const mainRelease = updated.releases.find(r => r.product_id === 'main_method');
+    
     if (user.plan_status === 'trial' && now > trialEnd) {
         updated.plan_status = 'expired';
-        // Se estava em trial full (originario de visualização temporaria), volta para partial
-        if (!user.product_released) {
-             updated.access_level = 'partial';
-             updated.tasks_unlocked = 3; // Reset to default free tasks
+        // Se estava em trial e não foi liberado full, mantem partial
+        if (mainRelease && mainRelease.access_level !== 'full') {
+            // No change needed really, stays partial
         }
         changed = true;
     }
@@ -140,9 +195,8 @@ export const logoutUser = () => {
 
 export const authenticate = (login: string, pass: string): { success: boolean, isAdmin?: boolean, user?: User, message?: string } => {
     const users = getAllUsers();
-    const cleanLogin = login.trim(); // Case sensitive password, case insensitive login usually
+    const cleanLogin = login.trim(); 
     
-    // Check 1: Explicit Admin Login requested by user
     if (cleanLogin === 'jhonatasrms' && pass === '1234') {
         const admin = users.find(u => u.id === 'admin_master');
         if (admin) {
@@ -151,7 +205,6 @@ export const authenticate = (login: string, pass: string): { success: boolean, i
         }
     }
 
-    // Check 2: Normal Email/WhatsApp Login
     const found = users.find(u => 
         (u.email?.toLowerCase() === cleanLogin.toLowerCase() || u.whatsapp === cleanLogin) && 
         u.password === pass
@@ -185,12 +238,16 @@ export const registerAccount = (name: string, email: string, pass: string, whats
         whatsapp,
         role: 'user',
         
-        // --- NEW LOGIC ---
         created_at: now.toISOString(),
         origin: 'visualizar_1_dia',
-        access_level: 'partial', // Inicia parcial, o Trial libera acesso via lógica de UI ou upgrade
-        tasks_unlocked: 3, // Default free tasks
-        product_released: false,
+        
+        // Multi-product setup: Default partial access to main method
+        releases: [{
+            product_id: 'main_method',
+            access_level: 'partial',
+            tasks_unlocked: 3
+        }],
+
         plan_status: 'trial', 
         trial_end: trialEnd.toISOString(),
         
@@ -224,9 +281,11 @@ export const adminCreateUser = (name: string, email: string, pass: string, whats
         
         created_at: now.toISOString(),
         origin: 'admin_created',
-        access_level: role === 'admin' ? 'full' : 'partial',
-        tasks_unlocked: role === 'admin' ? 999 : 3,
-        product_released: role === 'admin',
+        
+        releases: role === 'admin' ? 
+            PRODUCTS.map(p => ({ product_id: p.id, access_level: 'full', tasks_unlocked: 999 })) : 
+            [{ product_id: 'main_method', access_level: 'partial', tasks_unlocked: 3 }],
+
         plan_status: role === 'admin' ? 'paid' : 'trial',
         trial_end: trialEnd.toISOString(),
         
@@ -244,6 +303,10 @@ export const adminUpdateUser = (userId: string, data: Partial<User>) => {
     const users = getAllUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx >= 0) {
+        // Prevent role downgrade of master admin
+        if (users[idx].id === 'admin_master' && data.role === 'user') {
+            delete data.role;
+        }
         const updatedUser = { ...users[idx], ...data };
         users[idx] = updatedUser;
         saveAllUsers(users);
@@ -253,78 +316,90 @@ export const adminUpdateUser = (userId: string, data: Partial<User>) => {
 };
 
 export const adminDeleteUser = (userId: string) => {
+    if (userId === 'admin_master') return;
     const users = getAllUsers();
     const filtered = users.filter(u => u.id !== userId);
     saveAllUsers(filtered);
 };
 
-// EVENTO: Liberar Produto (Full Access)
-export const adminUnlockProduct = (userId: string, adminId: string) => {
+// --- PRODUCT RELEASE LOGIC ---
+
+export const upsertUserProductRelease = (
+    userId: string, 
+    productId: string, 
+    accessLevel: AccessLevel, 
+    adminId: string, 
+    tasksUnlocked?: number,
+    channels: NotificationChannel[] = []
+) => {
     const users = getAllUsers();
     const idx = users.findIndex(u => u.id === userId);
     
     if (idx >= 0) {
-        const updated = { ...users[idx] };
-        updated.access_level = 'full';
-        updated.tasks_unlocked = 999; // Total access
-        updated.product_released = true;
-        updated.released_by = adminId;
-        updated.released_at = new Date().toISOString();
-        updated.plan_status = 'paid';
-        
-        users[idx] = updated;
+        const user = users[idx];
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (!product) return null;
+
+        const releaseIdx = user.releases.findIndex(r => r.product_id === productId);
+        const tasks = tasksUnlocked ?? (accessLevel === 'full' ? product.total_tasks : product.partial_default);
+
+        const newRelease: UserProductRelease = {
+            product_id: productId,
+            access_level: accessLevel,
+            tasks_unlocked: tasks,
+            released_by: adminId,
+            released_at: new Date().toISOString()
+        };
+
+        if (releaseIdx >= 0) {
+            user.releases[releaseIdx] = newRelease;
+        } else {
+            user.releases.push(newRelease);
+        }
+
+        // Notification Worker Logic
+        channels.forEach(channel => {
+            const notif: AppNotification = {
+                id: `n_${Date.now()}_${Math.random()}`,
+                user_id: user.id,
+                title: `Acesso Liberado: ${product.title}`,
+                message: accessLevel === 'full' 
+                    ? `Parabéns! O administrador liberou seu acesso completo ao ${product.title}.` 
+                    : `Seu acesso ao ${product.title} foi atualizado.`,
+                type: 'success',
+                status: 'pending',
+                channel: channel,
+                timestamp: Date.now(),
+                link: '#dashboard'
+            };
+
+            // In-App: Save to user specific notifications
+            if (channel === 'in_app') {
+                const key = USER_NOTIF_KEY_PREFIX + user.id;
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                existing.unshift(notif);
+                localStorage.setItem(key, JSON.stringify(existing));
+            }
+
+            // WhatsApp/Email: In a real app, call API here. 
+            // Mocking sent status
+            if (channel !== 'in_app') {
+                console.log(`[Mock Worker] Sending ${channel} to ${user.name}: ${notif.message}`);
+            }
+        });
+
+        users[idx] = user;
         saveAllUsers(users);
-        return updated;
+        return user;
     }
     return null;
 };
 
-// EVENTO: Revogar Acesso
-export const adminRevokeAccess = (userId: string) => {
-    const users = getAllUsers();
-    const idx = users.findIndex(u => u.id === userId);
-    
-    if (idx >= 0) {
-        const updated = { ...users[idx] };
-        updated.access_level = 'partial';
-        updated.tasks_unlocked = 3; 
-        updated.product_released = false;
-        updated.plan_status = 'expired';
-        
-        users[idx] = updated;
-        saveAllUsers(users);
-        return updated;
-    }
-    return null;
-};
+// --- NOTIFICATIONS ---
 
-export const checkStreak = (user: User): User => {
-    const today = getTodayStr();
-    if (user.lastActiveDate === today) return user;
-    
-    // Simple streak logic
-    const lastActive = new Date(user.lastActiveDate);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - lastActive.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-    let newStreak = user.streak;
-    if (diffDays === 1) newStreak += 1;
-    else if (diffDays > 1) newStreak = 0;
-
-    const updatedUser = { ...user, lastActiveDate: today, streak: newStreak };
-    saveUser(updatedUser);
-    return updatedUser;
-};
-
-export const sendGlobalNotification = (notif: AppNotification) => {
-    const stored = localStorage.getItem(GLOBAL_NOTIF_KEY);
-    const current: AppNotification[] = stored ? JSON.parse(stored) : [];
-    const newNotif = { ...notif, timestamp: Date.now(), isGlobal: true };
-    
-    const updated = [newNotif, ...current].slice(0, 10);
-    localStorage.setItem(GLOBAL_NOTIF_KEY, JSON.stringify(updated));
-    return newNotif;
+export const getUserNotifications = (userId: string): AppNotification[] => {
+    const key = USER_NOTIF_KEY_PREFIX + userId;
+    return JSON.parse(localStorage.getItem(key) || '[]');
 };
 
 export const getLatestGlobalNotification = (): AppNotification | null => {
